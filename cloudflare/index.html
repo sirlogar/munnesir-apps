@@ -113,10 +113,18 @@
         </div>
       </div>
     </div>
-    <div class="bannerRight">
-    <button id="settingsOpenBtn" class="iconBtn" type="button" title="Ayarlar" aria-label="Ayarlar">
-      <svg class="uiIcon"><use href="#icon-settings"></use></svg>
-    </button>
+    
+    <!-- SAĞ TARAFI GÜVENLİ BÖLGEYE ALIYORUZ -->
+    <div style="display: flex; align-items: center; gap: 8px;">
+      
+      <!-- Bırakalım sync.js bu boş kutuyu ezip varsa kendi senkronizasyon ikonunu buraya koysun -->
+      <div class="bannerRight"></div> 
+      
+      <!-- Ayarlar butonumuz artık dokunulmaz bölgede! -->
+      <button id="settingsOpenBtn" class="iconBtn" type="button" title="Ayarlar" aria-label="Ayarlar">
+        <svg class="uiIcon"><use href="#icon-settings"></use></svg>
+      </button>
+      
     </div>
   </header>
 
