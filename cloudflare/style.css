@@ -91,10 +91,10 @@ body {
   min-width: 0; /* Taşma kilidi 1 */
 }
 
-/* AYARLAR BUTONUNUN KORUMA KALKANI */
 .bannerRight {
-  flex-shrink: 0; /* Yazı ne kadar uzarsa uzasın butonu ezmesini yasaklar */
-  margin-left: 10px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .brandTop { 
@@ -284,7 +284,24 @@ body {
 
 .poemTitleInput { width: 100%; background: transparent; border: none; color: var(--text-primary); font-size: 1.25rem; outline: none; }
 .poemContentTextarea { width: 100%; height: 240px; background: transparent; border: none; color: var(--text-primary); font-size: 1rem; line-height: 1.6; resize: none; outline: none; }
-.iconBtn { background: none; border: none; color: var(--text-primary); font-size: 1.3rem; cursor: pointer; }
+
+.iconBtn {
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 1.3rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  line-height: 1;
+}
+
+.iconBtn:hover {
+  opacity: 0.8;
+}
+
 .font-times { font-family: 'Tinos', 'Times New Roman', serif !important; }
 
 @media (max-width: 768px) {
@@ -879,79 +896,4 @@ select.selectInput, select.statusSelect {
   background-color: var(--bg-sidebar) !important;
   color: var(--text-primary) !important;
   border-radius: 8px;
-}
-
-
-/* AYARLAR BUTONUNU EKRANA VE RENGE SABİTLEME */
-.bannerRight {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  flex-shrink: 0 !important;
-  z-index: 1150 !important;
-}
-
-#settingsOpenBtn {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 38px !important;
-  height: 38px !important;
-  color: var(--text-primary) !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-}
-
-#settingsOpenBtn svg {
-  display: block;
-  stroke: var(--text-primary);
-  transition: transform 0.3s ease;
-}
-
-#settingsOpenBtn:hover svg {
-  transform: rotate(45deg);
-}
-
-
-/* HEADER AYARLAR BUTONUNUN KORUMA ZIRHI */
-.bannerRight {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: flex-end !important;
-  flex-shrink: 0 !important;
-}
-
-.settingsBtn {
-  width: 40px !important;
-  min-width: 40px !important;
-  height: 40px !important;
-  border-radius: 12px !important;
-  border: 1px solid var(--border-color) !important;
-  background: rgba(255, 255, 255, 0.05) !important;
-  color: var(--text-primary) !important;
-  cursor: pointer !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 0 !important;
-  box-sizing: border-box !important;
-  transition: all 0.2s ease !important;
-}
-
-.settingsBtn:hover {
-  background: rgba(255, 255, 255, 0.12) !important;
-  border-color: var(--accent-color) !important;
-}
-
-.settingsBtn svg {
-  width: 20px !important;
-  height: 20px !important;
-  display: block !important;
-  stroke: currentColor !important;
-  flex-shrink: 0 !important;
-  transition: transform 0.3s ease !important;
-}
-
-.settingsBtn:hover svg {
-  transform: rotate(45deg);
 }
