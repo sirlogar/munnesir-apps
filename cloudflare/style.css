@@ -911,3 +911,47 @@ select.selectInput, select.statusSelect {
 #settingsOpenBtn:hover svg {
   transform: rotate(45deg);
 }
+
+
+/* HEADER AYARLAR BUTONUNUN KORUMA ZIRHI */
+.bannerRight {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  flex-shrink: 0 !important;
+}
+
+.settingsBtn {
+  width: 40px !important;
+  min-width: 40px !important;
+  height: 40px !important;
+  border-radius: 12px !important;
+  border: 1px solid var(--border-color) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: var(--text-primary) !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  transition: all 0.2s ease !important;
+}
+
+.settingsBtn:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: var(--accent-color) !important;
+}
+
+.settingsBtn svg {
+  width: 20px !important;
+  height: 20px !important;
+  display: block !important;
+  stroke: currentColor !important;
+  flex-shrink: 0 !important;
+  transition: transform 0.3s ease !important;
+}
+
+.settingsBtn:hover svg {
+  transform: rotate(45deg);
+}

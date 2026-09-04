@@ -348,7 +348,6 @@ function showEditor(poemId = null) {
     $('#closeEditorBtn')?.addEventListener('click', () => hideEditor());
 
     $('#settingsOpenBtn')?.addEventListener('click', () => openModal('#settingsDialog'));
-    $('#sidebarSettingsBtn')?.addEventListener('click', () => {$('#sidebar')?.classList.remove('open');openModal('#settingsDialog');});
     $('#closeSettingsBtn')?.addEventListener('click', () => $('#settingsDialog')?.close());
 
     $('#openSyncAdvBtn')?.addEventListener('click', () => openModal('#syncAdvDialog'));
