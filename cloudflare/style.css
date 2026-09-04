@@ -897,3 +897,8 @@ select.selectInput, select.statusSelect {
   color: var(--text-primary) !important;
   border-radius: 8px;
 }
+
+
+.stdBtn {
+  gap: 8px; /* İkon ile metin arasına zarif bir nefes payı açar */
+}

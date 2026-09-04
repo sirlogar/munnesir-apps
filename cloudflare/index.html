@@ -13,6 +13,67 @@
 </head>
 <body class="theme-black">
 
+  <!-- MUNNESIR YEREL Sembol HAVUZU (SIFIR İNTERNET, SIFIR GECİKME) -->
+<svg style="display: none;" aria-hidden="true">
+  <defs>
+    <!-- Menü Sembolü -->
+    <symbol id="icon-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 5h16"/>
+      <path d="M4 12h16"/>
+      <path d="M4 19h16"/>
+    </symbol>
+
+    <!-- Ayarlar Sembolü -->
+    <symbol id="icon-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+      <circle cx="12" cy="12" r="4"/>
+    </symbol>
+
+    <!-- Çarpı Kapatma Sembolü -->
+    <symbol id="icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 6 6 18"/>
+      <path d="m6 6 12 12"/>
+    </symbol>
+
+    <!-- Kitaplar Sembolü -->
+    <symbol id="icon-books" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z"/>
+    </symbol>
+
+    <!-- Çöp Kutusu Sembolü -->
+    <symbol id="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+      <path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+    </symbol>
+
+    <!-- Taslak Sembolü -->
+    <symbol id="icon-taslak" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M16 4h2a2 2 0 0 1 2 2v2"/><path d="M21.34 15.664a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/>
+      <path d="M8 22H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+      <rect x="8" y="2" width="8" height="4" rx="1"/>
+    </symbol>
+
+    <!-- Yayına Hazır Sembolü -->
+    <symbol id="icon-ready" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/>
+      <circle cx="12" cy="12" r="3"/>
+    </symbol>
+
+    <!-- Arşiv Sembolü -->
+    <symbol id="icon-archive" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/>
+      <path d="M8 11h8"/>
+      <path d="M8 7h6"/>
+    </symbol>
+
+    <!-- Seçmeler Sembolü -->
+    <symbol id="icon-fav" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M17 3a2 2 0 0 1 2 2v15a1 1 0 0 1-1.496.868l-4.512-2.578a2 2 0 0 0-1.984 0l-4.512 2.578A1 1 0 0 1 5 20V5a2 2 0 0 1 2-2z"/>
+    </symbol>
+
+  </defs>
+</svg>
+
   <!-- EN ÜST SABİT BANNER -->
   <header class="topBanner">
     <div class="bannerLeft">
@@ -26,12 +87,9 @@
       </div>
     </div>
     <div class="bannerRight">
-      <button id="settingsOpenBtn" class="iconBtn" type="button" title="Ayarlar" aria-label="Ayarlar">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="3"></circle>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-        </svg>
-      </button>
+    <button id="settingsOpenBtn" class="iconBtn" type="button" title="Ayarlar" aria-label="Ayarlar">
+      <svg class="uiIcon"><use href="#icon-settings"></use></svg>
+    </button>
     </div>
   </header>
 
@@ -73,16 +131,39 @@
           <span class="sectionTitle">Durum</span>
           <div id="statusFilters" class="statusFilters">
             <button class="stdBtn active" data-status="all" type="button">Tümü</button>
-            <button class="stdBtn" data-status="draft" type="button">Taslak</button>
-            <button class="stdBtn" data-status="ready" type="button">Yayına hazır</button>
-            <button class="stdBtn" data-status="archive" type="button">Arşiv</button>
-            <button class="stdBtn" data-status="favorite" type="button">★ Seçmeler</button>
+
+            <button id="taslakBtn" class="stdBtn" data-status="draft" type="button">
+              <svg class="uiIcon"><use href="#icon-taslak"></use></svg>
+              <span>Taslak</span>
+            </button>
+
+            <button id="readyBtn" class="stdBtn" data-status="ready" type="button">
+              <svg class="uiIcon"><use href="#icon-ready"></use></svg>
+              <span>Yayına Hazır</span>
+            </button>
+
+            <button id="readyBtn" class="stdBtn" data-status="archive" type="button">
+              <svg class="uiIcon"><use href="#icon-archive"></use></svg>
+              <span>Arşiv</span>
+            </button>
+
+            <button id="favBtn" class="stdBtn" data-status="favorite" type="button">
+              <svg class="uiIcon"><use href="#icon-fav"></use></svg>
+              <span>Arşiv</span>
+            </button>
+
           </div>
         </div>
 
         <div class="navSection">
-          <button id="bookViewBtn" class="stdBtn full" type="button">📚 Kitap adayları</button>
-          <button id="trashViewBtn" class="stdBtn full" type="button">🗑 Çöp kutusu</button>
+          <button id="bookviewBtn" class="stdBtn full" type="button">
+            <svg class="uiIcon"><use href="#icon-books"></use></svg>
+            <span>Kitap adayları</span>
+          </button>
+          <button id="bookViewBtn" class="stdBtn full" type="button">
+            <svg class="uiIcon"><use href="#icon-trash"></use></svg>
+            <span>Çöp Kutusu</span>
+          </button>        
         </div>
       </div>
     </aside>
