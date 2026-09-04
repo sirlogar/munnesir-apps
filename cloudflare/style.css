@@ -83,10 +83,34 @@ body {
   z-index: 1100;
 }
 
-.bannerLeft { display: flex; align-items: center; gap: 16px; }
-.brandTop { display: flex; align-items: center; gap: 10px; }
-.brandLogo { width: 34px; height: 34px; border-radius: 50%; }
-.brandTitle { margin: 0; font-size: 1.25rem; }
+.bannerLeft { 
+  display: flex; 
+  align-items: center; 
+  gap: 16px; 
+  flex: 1; /* Kalan boşluğu almasını sağlar */
+  min-width: 0; /* Taşma kilidi 1 */
+}
+
+/* AYARLAR BUTONUNUN KORUMA KALKANI */
+.bannerRight {
+  flex-shrink: 0; /* Yazı ne kadar uzarsa uzasın butonu ezmesini yasaklar */
+  margin-left: 10px;
+}
+
+.brandTop { 
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  min-width: 0; /* Taşma kilidi 2 */
+}
+.brandLogo {
+  width: 34px; 
+  height: 34px; 
+  border-radius: 50%; }
+
+.brandTitle { 
+  margin: 0; 
+  font-size: 1.25rem; }
 
 .appContainer {
   margin-top: 60px;
@@ -271,6 +295,7 @@ body {
 .brandTextGroup {
   display: flex;
   flex-direction: column;
+  min-width: 0; /* Taşma kilidi 3 */
 }
 
 .brandTitle {
@@ -289,6 +314,8 @@ body {
   color: var(--subtext-color, rgba(255,255,255,0.65));
   margin-top: 2px;
   white-space: nowrap;
+  overflow: hidden; /* Sığmayan yazıyı gizler */
+  text-overflow: ellipsis; /* Sığmayan kısmın sonuna zarifçe ... koyar */
 }
 
 
@@ -614,7 +641,6 @@ input[type="search"] {
 /* 3. İKON VE BUTON SÜRÜKLENMELERİNİ ENGELLE */
 img, button, svg, .iconBtn, .brandLogo, .stdBtn, .sortTabBtn, .tagItem {
   -webkit-user-drag: none !important;
-  user-drag: none !important;
 }
 
 
