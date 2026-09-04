@@ -920,22 +920,27 @@ select.selectInput, select.statusSelect {
 }
 
 
-/* AYARLAR BUTONUNU TIKLAMA TUZAĞINDAN KURTARMA */
+/* HEADER ELEMANLARINI İKİ UCA ÇİVİLEME */
 .topBanner {
-  z-index: 2500 !important; /* Editörün (1050) kat kat üstüne çıkarır */
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
+/* SOL TARAFI SINIRLA: TÜM EKRANI YUTMASINI ENGELLE */
+.bannerLeft {
+  flex: 0 1 auto !important; /* flex: 1 yerine sadece kendi içeriği kadar yer kaplasın */
+  max-width: calc(100% - 60px) !important; /* Ayarlar butonuna her zaman en az 60px yer bıraksın */
+}
+
+/* SAĞ TARAFI SAĞA KİLİTLE VE GENİŞLİĞİNİ KORU */
 .bannerRight {
-  position: relative !important;
-  z-index: 2600 !important;
+  flex: 0 0 auto !important; /* Asla 0 piksele ezilemez */
   display: flex !important;
   align-items: center !important;
-  flex-shrink: 0 !important;
-}
-
-#settingsOpenBtn {
-  position: relative !important;
-  z-index: 2700 !important;
-  pointer-events: auto !important;
-  cursor: pointer !important;
+  justify-content: center !important;
+  min-width: 40px !important;
+  height: 100% !important;
 }
