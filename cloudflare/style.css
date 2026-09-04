@@ -899,6 +899,22 @@ select.selectInput, select.statusSelect {
 }
 
 
+/* TÜM DAHİLİ SVG İKONLARININ STANDART BOYUTU VE HİZASI */
+.uiIcon {
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  min-height: 18px !important;
+  display: inline-block !important;
+  stroke: currentColor !important;
+  fill: none !important;
+  flex-shrink: 0 !important;
+  pointer-events: none !important;
+}
+
+/* BUTON İÇİNDEKİ İKON İLE METNİN HİZALANMASI */
 .stdBtn {
-  gap: 8px; /* İkon ile metin arasına zarif bir nefes payı açar */
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
 }
