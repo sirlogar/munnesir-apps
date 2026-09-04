@@ -182,7 +182,8 @@
     }
 
     if (state.selectedTag) {
-      list = list.filter(p => (p.content || '').includes(`#${state.selectedTag}`) || (p.tags && p.tags.includes(state.selectedTag)));
+      // Sadece kesin etiket dizisine bakar, metin içindeki boşluklu tesadüfleri eler
+      list = list.filter(p => Array.isArray(p.tags) && p.tags.includes(state.selectedTag));
     }
 
     if (state.searchQuery) {
@@ -579,50 +580,57 @@ function showEditor(poemId = null) {
 
       reader.readAsText(file, 'UTF-8');
     });
-    
 
-    // ETİKET İSMİNİ TÜM ŞİİRLERDE TOPLU DEĞİŞTİRME
+
+    // ETİKET İSMİNİ DEĞİŞTİRME VE BOZUKLARI OTOMATİK ONARMA
     $('#saveTagRenameBtn')?.addEventListener('click', async () => {
       const oldTag = state.selectedTag;
-      const newTag = $('#editTagInput')?.value.trim();
+      let newTag = $('#editTagInput')?.value.trim();
 
-      // Eski ve yeni etiket boşsa veya aynıysa işlem yapma
       if (!oldTag || !newTag || oldTag === newTag) return;
 
-      let updatedCount = 0;
+      // Boşlukları otomatik alt tire yap (Kritik Koruma)
+      newTag = newTag.replace(/\s+/g, '_');
 
-      // Etikete sahip tüm şiirleri bul ve güncelle
+      const escapedOldTag = oldTag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const tagRegex = new RegExp('#' + escapedOldTag + '(?![\\wığüşöçİĞÜŞÖÇ0-9_])', 'g');
+
+      const changedPoems = [];
+
       for (const poem of state.poems) {
         let changed = false;
 
-        // 1. Şiirin etiket dizisinde (tags) varsa değiştir
-        if (Array.isArray(poem.tags) && poem.tags.includes(oldTag)) {
-          poem.tags = poem.tags.map(t => t === oldTag ? newTag : t);
-          changed = true;
-        }
-
-        // 2. Metnin içinde (content) #eskiEtiket varsa #yeniEtiket yap
+        // 1. Şiir içeriğindeki bozuk metni bul ve değiştir
         if (poem.content && poem.content.includes(`#${oldTag}`)) {
-          poem.content = poem.content.replaceAll(`#${oldTag}`, `#${newTag}`);
+          poem.content = poem.content.replace(tagRegex, `#${newTag}`);
           changed = true;
         }
 
-        // Değişiklik olduysa veritabanına kaydet
+        // 2. Etiket dizisini onar (Eskiyi sil, yeniyi ekle ve 24 şiiri kurtar)
+        if (changed || (Array.isArray(poem.tags) && poem.tags.includes(oldTag))) {
+          if (!Array.isArray(poem.tags)) poem.tags = [];
+          poem.tags = poem.tags.filter(t => t !== oldTag); 
+          if (!poem.tags.includes(newTag)) poem.tags.push(newTag); 
+          changed = true;
+        }
+
         if (changed) {
           poem.updatedAt = new Date().toISOString();
-          await savePoemToDB(poem);
-          updatedCount++;
+          changedPoems.push(poem);
         }
       }
 
-      // Güncelleme yapıldıysa arayüzü tazele
-      if (updatedCount > 0) {
-        state.selectedTag = newTag; // Filtreyi yeni etikete kaydır
-        await refresh(); 
+      if (changedPoems.length > 0) {
+        if (typeof window.saveMany === 'function') {
+          await window.saveMany(changedPoems);
+        } else {
+          for (const p of changedPoems) await savePoemToDB(p);
+        }
         
-        alert(`✓ '${oldTag}' etiketi '${newTag}' olarak değiştirildi (${updatedCount} şiir güncellendi).`);
+        state.selectedTag = newTag;
+        await refresh();
         
-        // Kutuyu gizle
+        alert(`✓ Başarılı! '${oldTag}' etiketi '${newTag}' yapıldı ve ${changedPoems.length} şiir onarılarak eşitlendi.`);
         const editBox = $('#tagEditBox');
         if (editBox) editBox.hidden = true;
       }
@@ -649,7 +657,8 @@ function showEditor(poemId = null) {
     if (!content) return;
 
     const selectedStatus = $('#editorStatusSelect')?.value || 'ready';
-    const extractedTags = (content.match(/#[\wığüşöçİĞÜŞÖÇ]+/g) || []).map(t => t.replace('#', ''));
+    // Rakamlar (0-9) ve alt tire (_) eklendi, boşluklarda otomatik keser
+    const extractedTags = (content.match(/#[\wığüşöçİĞÜŞÖÇ0-9_]+/g) || []).map(t => t.replace('#', ''));
 
     // Eski şiirin fontunu koru, yeni şiirse Tinos yap
     let existingFont = 'font-tinos';
