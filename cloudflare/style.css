@@ -941,3 +941,136 @@ select.selectInput, select.statusSelect {
   align-items: center !important;
   gap: 10px !important;
 }
+
+
+/* SİDEBAR BUTONLARINDA İKONLARI TEK ÇİZGİYE DİZİP SOLA YASLAMA */
+.sidebar .stdBtn {
+  justify-content: flex-start !important;
+  padding-left: 28px !important; /* Butonun merkezine yakın, şık ve ferah bir sol pay */
+}
+
+/* "TÜMÜ" BUTONU İKONSUZ OLDUĞU İÇİN ORTADA KALSIN */
+.sidebar .stdBtn[data-status="all"] {
+  justify-content: center !important;
+  padding-left: 16px !important;
+}
+
+
+/* ARAMA KUTUSU İÇİNE İKON YERLEŞTİRME */
+.searchWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.searchWrapper .searchIcon {
+  position: absolute;
+  left: 14px;
+  width: 16px !important;
+  height: 16px !important;
+  color: var(--text-primary);
+  opacity: 0.5;
+  pointer-events: none; /* Tıklamanın doğrudan arkadaki girdi kutusuna geçmesini sağlar */
+  z-index: 2;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+/* Yazının ve imlecin ikonun üstüne binmemesi için sol nefes payı */
+.searchWrapper .textInput {
+  padding-left: 40px !important;
+  width: 100%;
+}
+
+.searchWrapper:focus-within .searchIcon {
+  opacity: 1;
+  color: var(--accent-color);
+}
+
+
+/* KARTLARIN SIKIŞMASINI ENGELLEMEK İÇİN MİNİMUM GENİŞLİĞİ ARTIRMA */
+.poemGrid {
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)) !important;
+}
+
+/* KARTIN ALT PANELİ VE BUTON KORUMASI */
+.cardFooterActions {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-top: 16px !important;
+  padding-top: 12px !important;
+  border-top: 1px solid var(--border-color) !important;
+  gap: 8px !important;
+}
+
+.cardActionBtns {
+  display: flex; /* !important yazısını buradan sildik */
+  gap: 6px !important;
+  flex-shrink: 0 !important;
+}
+
+.cardActionBtn {
+  height: 30px !important;
+  padding: 0 9px !important;
+  font-size: 0.78rem !important;
+  border-radius: 8px !important;
+  white-space: nowrap !important; /* Yazının alt satıra düşmesini kesin olarak kilitler */
+  gap: 5px !important;            /* İkon ile metin arasındaki aşırı boşluğu toparlar */
+  flex-shrink: 0 !important;
+}
+
+
+/* ETİKET GÜNCELLE BUTONUNU DİĞERLERİ GİBİ CANLI KILMA */
+#saveTagRenameBtn {
+  height: 38px !important;
+  font-size: 0.85rem !important;
+  justify-content: center !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+  transition: all 0.2s ease !important;
+}
+
+/* ÜZERİNE GELİNDİĞİNDE (HOVER) */
+#saveTagRenameBtn:hover {
+  background: rgba(168, 85, 247, 0.15) !important;
+  border-color: var(--accent-color) !important;
+  color: #ffffff !important;
+  transform: translateY(-1px);
+}
+
+/* ÜSTÜNE BASILDIĞINDA (CLICK / ACTIVE) */
+#saveTagRenameBtn:active {
+  background: var(--accent-color) !important;
+  border-color: var(--accent-color) !important;
+  color: #ffffff !important;
+  transform: scale(0.98);
+}
+
+
+/* GENİŞ IZGARA MODALLARI İÇİN (ÇÖP KUTUSU VE KİTAPLAR) */
+dialog.modalDialog.wideModal {
+  max-width: 900px !important;
+  width: 95% !important;
+}
+
+dialog.modalDialog.wideModal .modalBody {
+  padding: 0;
+}
+
+/* ÇÖP KUTUSU ÖZEL SİLME BUTONU (TEHLİKE RENGİ) */
+.btn-danger {
+  color: #ef4444 !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+.btn-danger:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: #ef4444 !important;
+}
+
+/* MODAL İÇİ IZGARA KAYDIRMA DÜZELTMESİ */
+#trashListContainer.poemGrid, #bookListContainer.poemGrid {
+  padding: 10px 4px;
+}

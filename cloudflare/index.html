@@ -16,6 +16,7 @@
   <!-- MUNNESIR YEREL Sembol HAVUZU (SIFIR İNTERNET, SIFIR GECİKME) -->
 <svg style="display: none;" aria-hidden="true">
   <defs>
+
     <!-- Menü Sembolü -->
     <symbol id="icon-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M4 5h16"/>
@@ -71,6 +72,32 @@
       <path d="M17 3a2 2 0 0 1 2 2v15a1 1 0 0 1-1.496.868l-4.512-2.578a2 2 0 0 0-1.984 0l-4.512 2.578A1 1 0 0 1 5 20V5a2 2 0 0 1 2-2z"/>
     </symbol>
 
+    <!-- Arama Sembolü -->
+    <symbol id="icon-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/>
+    </symbol>
+
+    <!-- Mürekkep Kalem Sembolü -->
+    <symbol id="icon-pen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M15.707 21.293a1 1 0 0 1-1.414 0l-1.586-1.586a1 1 0 0 1 0-1.414l5.586-5.586a1 1 0 0 1 1.414 0l1.586 1.586a1 1 0 0 1 0 1.414z"/>
+      <path d="m18 13-1.375-6.874a1 1 0 0 0-.746-.776L3.235 2.028a1 1 0 0 0-1.207 1.207L5.35 15.879a1 1 0 0 0 .776.746L13 18"/>
+      <path d="m2.3 2.3 7.286 7.286"/><circle cx="11" cy="11" r="2"/>
+    </symbol>
+
+    <!-- Paylaşma Sembolü -->
+    <symbol id="icon-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/>
+      <circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/>
+      <line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/>
+    </symbol>
+
+    <!-- Geri Yükle Sembolü -->
+    <symbol id="icon-restore" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 8v11a2 2 0 0 0 2 2h2"/><path d="M20 8v11a2 2 0 0 1-2 2h-2"/>
+      <path d="m9 15 3-3 3 3"/><path d="M12 12v9"/>
+    </symbol>
+
+
   </defs>
 </svg>
 
@@ -97,9 +124,13 @@
     <!-- SOL SLIDE MENÜ -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebarNav">
-        <!-- ARAMA KUTUSU -->
+
+          <!-- ARAMA KUTUSU -->
         <div class="navSection">
-          <input type="search" id="searchInput" class="textInput" placeholder="🔍 Şiir veya etiket ara..." autocomplete="off" name="search_no_autofill" spellcheck="false" />
+          <div class="searchWrapper">
+            <svg class="uiIcon searchIcon"><use href="#icon-search"></use></svg>
+            <input type="search" id="searchInput" class="textInput" placeholder="Şiir veya etiket ara..." autocomplete="off" name="search_no_autofill" spellcheck="false" />
+          </div>
         </div>
 
         <!-- SIRALAMA SEÇENEKLERİ (SEKME DÜZENİ) -->
@@ -112,7 +143,6 @@
           </div>
         </div>
 
-
         <!-- ETİKETLER KUTUSU -->
         <div class="navSection">
           <span class="sectionTitle">Etiketler</span>
@@ -120,11 +150,10 @@
 
           <!-- EN ALTTA ETİKET İSMİ DÜZENLEME ALANI -->
           <div class="tagEditBox" id="tagEditBox" hidden>
-            <span class="sectionTitle" style="font-size:0.7rem; color: var(--accent-color);">Seçili Etiketi Düzenle</span>
+            <span class="sectionTitle">Seçili Etiketi Düzenle</span>
             <input type="text" id="editTagInput" class="textInput" placeholder="Yeni etiket adı..." />
-            <button id="saveTagRenameBtn" class="stdBtn primary full" style="height:34px; font-size:0.8rem;" type="button">İsmi Güncelle</button>
+            <button id="saveTagRenameBtn" class="stdBtn full" type="button">İsmi Güncelle</button>
           </div>
-        </div>
 
         <!-- DURUM FİLTRELERİ -->
         <div class="navSection">
@@ -153,7 +182,7 @@
             </button>
           </div>
         </div>
-        
+
         <div class="navSection">
           <button id="bookViewBtn" class="stdBtn full" type="button">
             <svg class="uiIcon"><use href="#icon-books"></use></svg>
@@ -320,7 +349,7 @@
   </dialog>
 
   <!-- KİTAP ADAYLARI POP-UP -->
-  <dialog id="bookDialog" class="modalDialog">
+  <dialog id="bookDialog" class="modalDialog" wideModal>
     <div class="modalContainer">
       <div class="modalHeader">
         <h2>📚 Kitap Adayları</h2>
@@ -333,7 +362,7 @@
   </dialog>
 
   <!-- ÇÖP KUTUSU POP-UP -->
-  <dialog id="trashDialog" class="modalDialog">
+  <dialog id="trashDialog" class="modalDialog" wideModal>
     <div class="modalContainer">
       <div class="modalHeader">
         <h2>🗑 Çöp Kutusu</h2>
@@ -354,6 +383,39 @@
       </div>
       <div id="readerMeta" class="cardMeta"></div>
       <pre id="readerContent" class="readerContent font-times"></pre>
+      
+      <!-- EN ALTA KAYDIRILDIĞINDA GÖRÜNEN AKSİYON PANELİ -->
+      <div class="cardFooterActions" style="margin-top: 20px; padding-top: 14px; justify-content: flex-end;">
+        
+        <!-- NORMAL MOD BUTONLARI -->
+        <div id="readerStandardActions" class="cardActionBtns">
+          <button id="readerShareBtn" class="stdBtn cardActionBtn" type="button">
+            <svg class="uiIcon"><use href="#icon-share"></use></svg>
+            <span>Paylaş</span>
+          </button>
+          <button id="readerEditBtn" class="stdBtn cardActionBtn" type="button">
+            <svg class="uiIcon"><use href="#icon-pen"></use></svg>
+            <span>Düzenle</span>
+          </button>
+          <button id="readerSoftDeleteBtn" class="stdBtn cardActionBtn btn-danger" type="button">
+            <svg class="uiIcon"><use href="#icon-trash"></use></svg>
+            <span>Sil</span>
+          </button>
+        </div>
+
+        <!-- ÇÖP KUTUSU MODU BUTONLARI -->
+        <div id="readerTrashActions" class="cardActionBtns" style="display: none;">
+          <button id="readerRestoreBtn" class="stdBtn cardActionBtn" type="button">
+            <svg class="uiIcon"><use href="#icon-restore"></use></svg>
+            <span>Geri Yükle</span>
+          </button>
+          <button id="readerDeleteBtn" class="stdBtn cardActionBtn btn-danger" type="button">
+            <svg class="uiIcon"><use href="#icon-trash"></use></svg>
+            <span>Kalıcı Sil</span>
+          </button>
+        </div>
+
+      </div>
     </div>
   </dialog>
 

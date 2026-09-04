@@ -2,6 +2,7 @@
   let db = null;
   let currentEditingId = null;
   let currentSelectedFont = 'font-tinos';
+  let currentReadingId = null;
 
   const state = {
     poems: [],
@@ -72,12 +73,10 @@
     });
   }
 
+// Kartların sol altı: Şiirin orijinal yazılış tarihi
   function getPoemDate(p) {
-    // Öncelik 1: Şiirin asıl ilk oluşturulma tarihi (createdAt)
-    // Öncelik 2: Güncelleme tarihi (updatedAt)
     const rawDate = p.createdAt || p.updatedAt;
     if (!rawDate) return '';
-    
     const d = new Date(rawDate);
     if (isNaN(d.getTime())) return '';
     return d.toLocaleDateString('tr-TR', {
@@ -87,11 +86,31 @@
     });
   }
 
-  function formatDate(dStr) {
-    if (!dStr) return '';
+  // Okuma penceresi için saatli ve tam tarih formatı
+  function formatDetailedDate(dStr) {
+    if (!dStr) return '-';
     const d = new Date(dStr);
-    return isNaN(d.getTime()) ? '' : d.toLocaleDateString('tr-TR');
+    if (isNaN(d.getTime())) return '-';
+    return d.toLocaleDateString('tr-TR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   }
+
+
+  // 4 Eylül 2026'daki toplu aktarma/içe alma damgasını tespit eder
+  function isBulkImportDate(dStr) {
+    if (!dStr) return false;
+    const d = new Date(dStr);
+    if (isNaN(d.getTime())) return false;
+    return d.getFullYear() === 2026 && d.getMonth() === 8 && d.getDate() === 4;
+  }
+
+
+
 
   function plain(str) {
     return String(str || '').replace(/[&<>'"]/g, (c) => ({
@@ -197,9 +216,15 @@
     list.sort((a, b) => {
       if (state.sortOrder === 'titleAsc') {
         return (a.title || '').localeCompare(b.title || '', 'tr');
-      } else {
+      } else if (state.sortOrder === 'createdDesc') {
         const dateA = new Date(a.createdAt || a.updatedAt || 0);
         const dateB = new Date(b.createdAt || b.updatedAt || 0);
+        return dateB - dateA;
+      } else {
+        // Son Düzenlenen: Sahte 4 Eylül damgası varsa orijinal doğum tarihine göre diz
+        const getRealUpdated = (p) => (!p.updatedAt || isBulkImportDate(p.updatedAt)) ? (p.createdAt || 0) : p.updatedAt;
+        const dateA = new Date(getRealUpdated(a));
+        const dateB = new Date(getRealUpdated(b));
         return dateB - dateA;
       }
     });
@@ -225,9 +250,16 @@
         <div class="cardFooterActions">
           <span style="font-size:0.75rem; opacity:0.6;">${getPoemDate(p)}</span>
           <div class="cardActionBtns">
-            <button class="stdBtn cardActionBtn" onclick="window.sharePoem('${p.id}', event)">🔗 Paylaş</button>
-            <button class="stdBtn cardActionBtn" onclick="window.editPoem('${p.id}', event)">✏️ Düzenle</button>
+            <button class="stdBtn cardActionBtn" onclick="window.sharePoem('${p.id}', event)">
+              <svg class="uiIcon"><use href="#icon-share"></use></svg>
+              <span>Paylaş</span>
+            </button>
+            <button class="stdBtn cardActionBtn" onclick="window.editPoem('${p.id}', event)">
+              <svg class="uiIcon"><use href="#icon-pen"></use></svg>
+              <span>Düzenle</span>
+            </button>
           </div>
+        </div>
         </div>
       </article>
     `).join('');
@@ -242,20 +274,32 @@
   function openReader(id) {
     const poem = state.poems.find(p => p.id === id);
     if (!poem) return;
+    currentReadingId = id;
 
     $('#readerTitle').textContent = poem.title;
-    $('#readerMeta').textContent = formatDate(poem.updatedAt);
+    
+    const metaEl = $('#readerMeta');
+    if (metaEl) {
+      // Sadece oluşturulma ve güncelleme tarihleri birbirinden farklıysa düzenleme say
+      const hasBeenEdited = poem.updatedAt && poem.createdAt && (poem.updatedAt !== poem.createdAt);
+      
+      metaEl.innerHTML = `
+        <div style="display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem; opacity: 0.75; margin-bottom: 12px;">
+          <span><strong>İlk Düzenlenen Tarih:</strong> ${formatDetailedDate(poem.createdAt || poem.updatedAt)}</span>
+          <span><strong>Son Düzenleme:</strong> ${hasBeenEdited ? formatDetailedDate(poem.updatedAt) : 'Düzenlenmedi'}</span>
+        </div>
+      `;
+    }
+
     const content = $('#readerContent');
     content.textContent = poem.content;
-    
-    // FONT HATASI FIXLENDI: Şiirin kendi fontunu çeker
     content.className = `readerContent ${poem.fontFamily || 'font-tinos'}`;
 
     document.body.classList.add('modal-open');
     $('#readerDialog')?.showModal();
   }
 
-function showEditor(poemId = null) {
+  function showEditor(poemId = null) {
     currentEditingId = poemId;
     const feed = $('#feedView');
     const editor = $('#editorView');
@@ -397,6 +441,7 @@ function showEditor(poemId = null) {
 
     // KİTAP ADAYLARI
     $('#bookViewBtn')?.addEventListener('click', () => {
+      document.body.classList.add('modal-open'); // ARKA PLAN KAYMA KİLİDİ
       const localBooks = JSON.parse(localStorage.getItem('munnesir-books') || '[]');
       const bookPoemIds = new Set();
       localBooks.forEach(b => (b.poemIds || []).forEach(id => bookPoemIds.add(id)));
@@ -405,44 +450,72 @@ function showEditor(poemId = null) {
       const container = $('#bookListContainer');
 
       if (books.length) {
+        container.className = "poemGrid";
         container.innerHTML = books.map(b => `
-          <div style="padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
-            <div>
-              <strong style="display:block;">• ${plain(b.title)}</strong>
-              <small style="opacity:0.6;">${formatDate(b.updatedAt)}</small>
+          <article class="poemCard" data-id="${b.id}">
+            <div class="cardMainClick" onclick="window.openReader('${b.id}')">
+              <h3>${plain(b.title)}</h3>
+              <p class="${b.fontFamily || 'font-tinos'}">${plain(b.content).slice(0, 140)}...</p>
             </div>
-            <span style="font-size: 0.8rem; color: #a855f7; background: rgba(168, 85, 247, 0.1); padding: 4px 8px; border-radius: 6px;">Kitap Adayı</span>
-          </div>
+            <div class="cardFooterActions">
+              <span style="font-size:0.75rem; opacity:0.6;">${getPoemDate(b)}</span>
+              <div class="cardActionBtns">
+                <button class="stdBtn cardActionBtn" onclick="window.sharePoem('${b.id}', event)">
+                  <svg class="uiIcon"><use href="#icon-share"></use></svg><span>Paylaş</span>
+                </button>
+                <button class="stdBtn cardActionBtn" onclick="window.editPoem('${b.id}', event)">
+                  <svg class="uiIcon"><use href="#icon-pen"></use></svg><span>Düzenle</span>
+                </button>
+              </div>
+            </div>
+          </article>
         `).join('');
       } else {
+        container.className = "modalBody";
         container.innerHTML = '<p>Henüz kitap adayı olarak işaretlenmiş bir çalışma bulunamadı.</p>';
       }
       $('#bookDialog')?.showModal();
     });
 
 
+
     // ÇÖP KUTUSU
     $('#trashViewBtn')?.addEventListener('click', async () => {
+      document.body.classList.add('modal-open'); // ARKA PLAN KAYMA KİLİDİ
       const deletedSyncIds = new Set(JSON.parse(localStorage.getItem('munnesir-sync-deleted-ids') || '[]').map(x => x.id));
       const trashed = state.poems.filter(p => p.trashedAt || p.status === 'trash' || p.status === 'deleted' || deletedSyncIds.has(p.id));
       const container = $('#trashListContainer');
 
       if (trashed.length) {
+        container.className = "poemGrid";
         container.innerHTML = trashed.map(t => `
-          <div style="padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
-            <div>
-              <strong style="display:block;">${plain(t.title)}</strong>
-              <small style="opacity:0.6;">${formatDate(t.updatedAt || t.trashedAt)}</small>
+          <article class="poemCard" data-id="${t.id}">
+            <div class="cardMainClick" onclick="window.openReader('${t.id}', true)">
+              <h3>${plain(t.title)}</h3>
+              <p class="${t.fontFamily || 'font-tinos'}">${plain(t.content).slice(0, 140)}...</p>
             </div>
-            <span style="font-size: 0.8rem; color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 4px 8px; border-radius: 6px;">Silindi</span>
-          </div>
+            <div class="cardFooterActions">
+              <span style="font-size:0.75rem; opacity:0.6;">${getPoemDate(t)}</span>
+              <div class="cardActionBtns">
+                <button class="stdBtn cardActionBtn" onclick="window.restorePoem('${t.id}', event)">
+                  <svg class="uiIcon"><use href="#icon-restore"></use></svg><span>Geri Yükle</span>
+                </button>
+                <button class="stdBtn cardActionBtn btn-danger" onclick="window.hardDeletePoem('${t.id}', event)">
+                  <svg class="uiIcon"><use href="#icon-trash"></use></svg><span>Sil</span>
+                </button>
+              </div>
+            </div>
+          </article>
         `).join('');
       } else {
+        container.className = "modalBody";
         container.innerHTML = '<p>Çöp kutusu boş.</p>';
       }
       $('#trashDialog')?.showModal();
     });
 
+    
+    // TEMA VE DURUM FİLTRESİ KÖPRÜLERİ
     $$('.themeChoice').forEach(btn => {
       btn.addEventListener('click', () => applyTheme(btn.dataset.themeChoice));
     });
@@ -455,9 +528,9 @@ function showEditor(poemId = null) {
         renderFeed();
       });
     });
+
+    // Kaydedilmiş temayı ilk açılışta uygular
     applyTheme(localStorage.getItem('munnesir-theme') || 'purple');
-
-
 
 
     // JSON DIŞA AKTAR (YEDEK AL)
@@ -539,8 +612,9 @@ function showEditor(poemId = null) {
               favorite: Boolean(item.favorite),
               source: item.source || 'manual',
               tags: tags.length ? tags : ['(boş)'],
+              // app.js (JSON Yükleme Bloğu)
               createdAt: item.createdAt || new Date().toISOString(),
-              updatedAt: item.updatedAt || new Date().toISOString()
+              updatedAt: item.updatedAt || item.createdAt || new Date().toISOString() // Boşsa bugünü değil, oluşturulma tarihini alsın
             };
           }).filter(p => p.content && p.content.trim() !== '');
 
@@ -650,74 +724,98 @@ function showEditor(poemId = null) {
       });
     });
 
-  // TAM EKRAN EDİTÖR KAYDET BUTONU
-  $('#editorSaveBtn')?.addEventListener('click', async () => {
-    const title = $('#editorTitleInput')?.value.trim() || 'Başlıksız Şiir';
-    const content = $('#editorContentInput')?.value.trim() || '';
-    if (!content) return;
+    // TAM EKRAN EDİTÖR KAYDET BUTONU
+    $('#editorSaveBtn')?.addEventListener('click', async () => {
+      const title = $('#editorTitleInput')?.value.trim() || 'Başlıksız Şiir';
+      const content = $('#editorContentInput')?.value.trim() || '';
+      if (!content) return;
 
-    const selectedStatus = $('#editorStatusSelect')?.value || 'ready';
-    // Rakamlar (0-9) ve alt tire (_) eklendi, boşluklarda otomatik keser
-    const extractedTags = (content.match(/#[\wığüşöçİĞÜŞÖÇ0-9_]+/g) || []).map(t => t.replace('#', ''));
+      const selectedStatus = $('#editorStatusSelect')?.value || 'ready';
+      // Rakamlar (0-9) ve alt tire (_) eklendi, boşluklarda otomatik keser
+      const extractedTags = (content.match(/#[\wığüşöçİĞÜŞÖÇ0-9_]+/g) || []).map(t => t.replace('#', ''));
 
-    // Eski şiirin fontunu koru, yeni şiirse Tinos yap
-    let existingFont = 'font-tinos';
-    if (currentEditingId) {
-      const oldPoem = state.poems.find(p => p.id === currentEditingId);
-      if (oldPoem && oldPoem.fontFamily) existingFont = oldPoem.fontFamily;
-    }
+      // Eski şiirin fontunu koru, yeni şiirse Tinos yap
+      let existingFont = 'font-tinos';
+      if (currentEditingId) {
+        const oldPoem = state.poems.find(p => p.id === currentEditingId);
+        if (oldPoem && oldPoem.fontFamily) existingFont = oldPoem.fontFamily;
+      }
 
-    const poemData = {
-      id: currentEditingId || `poem-${Date.now()}`,
-      title,
-      content,
-      tags: extractedTags,
-      fontFamily: existingFont,
-      status: selectedStatus,
-      updatedAt: new Date().toISOString(),
-      createdAt: currentEditingId ? (state.poems.find(p => p.id === currentEditingId)?.createdAt || new Date().toISOString()) : new Date().toISOString(),
-      favorite: currentEditingId ? (state.poems.find(p => p.id === currentEditingId)?.favorite || false) : false
-    };
+      const poemData = {
+        id: currentEditingId || `poem-${Date.now()}`,
+        title,
+        content,
+        tags: extractedTags,
+        fontFamily: existingFont,
+        status: selectedStatus,
+        updatedAt: new Date().toISOString(),
+        createdAt: currentEditingId ? (state.poems.find(p => p.id === currentEditingId)?.createdAt || new Date().toISOString()) : new Date().toISOString(),
+        favorite: currentEditingId ? (state.poems.find(p => p.id === currentEditingId)?.favorite || false) : false
+      };
 
-    await savePoemToDB(poemData);
-    
-    // ID'yi sabit tut, editörü kapatma
-    currentEditingId = poemData.id; 
-    refresh(); 
+      await savePoemToDB(poemData);
+      
+      // ID'yi sabit tut, editörü kapatma
+      currentEditingId = poemData.id; 
+      refresh(); 
 
-    // Görsel Geri Bildirim
-    const saveBtn = $('#editorSaveBtn');
-    const originalText = saveBtn.innerHTML;
-    saveBtn.innerHTML = '✓ Kaydedildi';
-    saveBtn.classList.add('active');
-    
-    setTimeout(() => {
-      saveBtn.innerHTML = originalText;
-      saveBtn.classList.remove('active');
-    }, 2000);
-  });
+      // Görsel Geri Bildirim
+      const saveBtn = $('#editorSaveBtn');
+      const originalText = saveBtn.innerHTML;
+      saveBtn.innerHTML = '✓ Kaydedildi';
+      saveBtn.classList.add('active');
+      
+      setTimeout(() => {
+        saveBtn.innerHTML = originalText;
+        saveBtn.classList.remove('active');
+      }, 2000);
+    });
 
-  $('#editorAddTagBtn')?.addEventListener('click', () => {
-    const input = $('#editorContentInput');
-    if (input) {
-      input.value += ' #yeniEtiket';
-      input.focus();
-      updateEditorStats();
-    }
-  });
+    $('#editorAddTagBtn')?.addEventListener('click', () => {
+      const input = $('#editorContentInput');
+      if (input) {
+        input.value += ' #yeniEtiket';
+        input.focus();
+        updateEditorStats();
+      }
+    });
 
-  $('#editorShareBtn')?.addEventListener('click', () => {
-    const title = $('#editorTitleInput').value.trim();
-    const content = $('#editorContentInput').value.trim();
-    if (!content) return;
-    const shareText = `${title}\n\n${content}\n\n— Munnesir`;
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(shareText).then(() => {
-        alert('Şiir metni kopyalandı!');
-      });
-    }
-  });
-  // YAZI EDİTÖRÜ DİNLEYİCİLERİ SONU
+    $('#editorShareBtn')?.addEventListener('click', () => {
+      const title = $('#editorTitleInput').value.trim();
+      const content = $('#editorContentInput').value.trim();
+      if (!content) return;
+      const shareText = `${title}\n\n${content}\n\n— Munnesir`;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(shareText).then(() => {
+          alert('Şiir metni kopyalandı!');
+        });
+      }
+    });
+    // YAZI EDİTÖRÜ DİNLEYİCİLERİ SONU
+
+
+    $('#readerShareBtn')?.addEventListener('click', (e) => {
+        if (currentReadingId) window.sharePoem(currentReadingId, e);
+    });
+
+    $('#readerEditBtn')?.addEventListener('click', (e) => {
+      if (currentReadingId) {
+        $('#readerDialog')?.close();
+        window.editPoem(currentReadingId, e);
+      }
+    });
+
+    $('#readerSoftDeleteBtn')?.addEventListener('click', (e) => {
+      if (currentReadingId) window.moveToTrash(currentReadingId, e);
+    });
+
+    $('#readerDeleteBtn')?.addEventListener('click', (e) => {
+      if (currentReadingId) window.hardDeletePoem(currentReadingId, e);
+    });
+
+    $('#readerRestoreBtn')?.addEventListener('click', (e) => {
+    if (currentReadingId) window.restorePoem(currentReadingId, e);
+    });
 
   }//****** initEvents sonu ******
 
@@ -803,14 +901,45 @@ function showEditor(poemId = null) {
   }
 
   // GLOBAL DÜZENLEME VE PAYLAŞMA KÖPRÜLERİ
-  window.openReader = function(id) {
-    const poem = state.poems.find(p => p.id === id);
+
+  // OKUMA PENCERESİ AÇICI
+  window.openReader = function(id, isTrash = false) {
+    const poem = state.poems.find(p => String(p.id) === String(id));
     if (!poem) return;
+    currentReadingId = poem.id;
+
     $('#readerTitle').textContent = poem.title;
-    $('#readerMeta').textContent = formatDate(poem.updatedAt);
+    
+    const metaEl = $('#readerMeta');
+    if (metaEl) {
+      const hasBeenEdited = poem.updatedAt && poem.createdAt && (poem.updatedAt !== poem.createdAt) && (typeof isBulkImportDate === 'function' ? !isBulkImportDate(poem.updatedAt) : true);
+      metaEl.innerHTML = `
+        <div style="display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem; opacity: 0.75; margin-bottom: 12px;">
+          <span><strong>İlk Düzenlenen Tarih:</strong> ${formatDetailedDate(poem.createdAt || poem.updatedAt)}</span>
+          <span><strong>Son Düzenleme:</strong> ${hasBeenEdited ? formatDetailedDate(poem.updatedAt) : 'Düzenlenmedi'}</span>
+        </div>
+      `;
+    }
+
     const content = $('#readerContent');
     content.textContent = poem.content;
     content.className = `readerContent ${poem.fontFamily || 'font-tinos'}`;
+
+    // BUTON GÖSTER/GİZLE MANTIĞI
+    const stdActions = $('#readerStandardActions');
+    const trashActions = $('#readerTrashActions');
+    
+    // Şiir çöp kutusundaysa veya açıkça çöp kutusu modunda çağrıldıysa
+    const isTrashedPoem = isTrash || poem.trashedAt || poem.status === 'trash' || poem.status === 'deleted';
+
+    if (isTrashedPoem) {
+      if (stdActions) stdActions.style.display = 'none';
+      if (trashActions) trashActions.style.display = 'flex';
+    } else {
+      if (stdActions) stdActions.style.display = 'flex';
+      if (trashActions) trashActions.style.display = 'none';
+    }
+
     document.body.classList.add('modal-open');
     $('#readerDialog')?.showModal();
   };
@@ -831,6 +960,70 @@ function showEditor(poemId = null) {
         alert('Şiir metni panoya kopyalandı!');
       });
     }
+  };
+
+  window.restorePoem = async function(id, e) {
+    if (e) e.stopPropagation();
+    const poem = state.poems.find(p => String(p.id) === String(id));
+    if (!poem) return;
+
+    poem.trashedAt = null;
+    if (poem.status === 'trash' || poem.status === 'deleted') {
+      poem.status = 'archive'; // Geri dönen şiir güvende kalsın diye arşive alınır
+    }
+    poem.updatedAt = new Date().toISOString();
+
+    await window.savePoem(poem);
+    await window.refresh();
+
+    // Eğer çöp kutusu veya okuma penceresi açıksa UI'ı yenile
+    $('#readerDialog')?.close();
+    const trashBtn = $('#trashViewBtn');
+    if (trashBtn && $('#trashDialog')?.open) trashBtn.click();
+  };
+
+  window.moveToTrash = async function(id, e) {
+    if (e) e.stopPropagation();
+    if (!confirm('Bu şiiri çöp kutusuna taşımak istediğinize emin misiniz?')) return;
+
+    const poem = state.poems.find(p => String(p.id) === String(id));
+    if (!poem) return;
+
+    // Şiiri çöp kutusuna gönderen etiketleri basıyoruz
+    poem.trashedAt = new Date().toISOString();
+    poem.status = 'trash';
+    poem.updatedAt = new Date().toISOString();
+
+    await window.savePoem(poem);
+    await window.refresh();
+
+    // İşlem bitince pencereyi kapat
+    $('#readerDialog')?.close();
+  };
+
+  window.hardDeletePoem = async function(id, e) {
+    if (e) e.stopPropagation();
+    
+    // 1. "Kalıcı" kelimesi çıkarıldı ve metin sadeleştirildi
+    if (!confirm('Bu şiiri silmek istediğinize emin misiniz?')) return;
+
+    // 2. Tip Uyuşmazlığı Çözümü (Silinmeme sorununun ana nedeni)
+    const poem = state.poems.find(p => String(p.id) === String(id));
+    if (!poem) return;
+
+    // Veritabanından kazıma işlemi
+    const tx = db.transaction('poems', 'readwrite');
+    const store = tx.objectStore('poems');
+    
+    // Ham id yerine, eşleşen orijinal poem.id'yi kullanarak tip uyuşmazlığını aşıyoruz
+    store.delete(poem.id); 
+    
+    tx.oncomplete = async () => {
+      await window.refresh();
+      $('#readerDialog')?.close();
+      const trashBtn = $('#trashViewBtn');
+      if (trashBtn && $('#trashDialog')?.open) trashBtn.click();
+    };
   };
 
 // SAYFA İLK AÇILDIĞINDA EDİTÖRÜ GİZLİ TUT, AKIŞI GÖSTER
