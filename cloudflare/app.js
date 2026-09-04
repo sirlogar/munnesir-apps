@@ -579,34 +579,52 @@ function showEditor(poemId = null) {
 
       reader.readAsText(file, 'UTF-8');
     });
+    
 
-    // ETİKET İSMİNİ TÜM ŞİİRLERDE TOPLU GÜNCELLEME VE SENKRONİZE ETME
+    // ETİKET İSMİNİ TÜM ŞİİRLERDE TOPLU DEĞİŞTİRME
     $('#saveTagRenameBtn')?.addEventListener('click', async () => {
       const oldTag = state.selectedTag;
       const newTag = $('#editTagInput')?.value.trim();
 
+      // Eski ve yeni etiket boşsa veya aynıysa işlem yapma
       if (!oldTag || !newTag || oldTag === newTag) return;
 
-      const advStatus = $('#syncAdvStatusText');
       let updatedCount = 0;
 
-      // Etikete sahip tüm şiirleri güncelle
+      // Etikete sahip tüm şiirleri bul ve güncelle
       for (const poem of state.poems) {
+        let changed = false;
+
+        // 1. Şiirin etiket dizisinde (tags) varsa değiştir
         if (Array.isArray(poem.tags) && poem.tags.includes(oldTag)) {
           poem.tags = poem.tags.map(t => t === oldTag ? newTag : t);
-          // Metin içindeki #eskiEtiket varsa onu da değiştir
-          if (poem.content) {
-            poem.content = poem.content.replaceAll(`#${oldTag}`, `#${newTag}`);
-          }
+          changed = true;
+        }
+
+        // 2. Metnin içinde (content) #eskiEtiket varsa #yeniEtiket yap
+        if (poem.content && poem.content.includes(`#${oldTag}`)) {
+          poem.content = poem.content.replaceAll(`#${oldTag}`, `#${newTag}`);
+          changed = true;
+        }
+
+        // Değişiklik olduysa veritabanına kaydet
+        if (changed) {
           poem.updatedAt = new Date().toISOString();
           await savePoemToDB(poem);
           updatedCount++;
         }
       }
-      state.selectedTag = newTag;
-      await refresh();
-      if (advStatus) {
-        advStatus.textContent = `✓ '${oldTag}' etiketi '${newTag}' olarak değiştirildi (${updatedCount} şiir güncellendi).`;
+
+      // Güncelleme yapıldıysa arayüzü tazele
+      if (updatedCount > 0) {
+        state.selectedTag = newTag; // Filtreyi yeni etikete kaydır
+        await refresh(); 
+        
+        alert(`✓ '${oldTag}' etiketi '${newTag}' olarak değiştirildi (${updatedCount} şiir güncellendi).`);
+        
+        // Kutuyu gizle
+        const editBox = $('#tagEditBox');
+        if (editBox) editBox.hidden = true;
       }
     });
 
