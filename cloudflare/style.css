@@ -918,3 +918,24 @@ select.selectInput, select.statusSelect {
   align-items: center !important;
   gap: 10px !important;
 }
+
+
+/* AYARLAR BUTONUNU TIKLAMA TUZAĞINDAN KURTARMA */
+.topBanner {
+  z-index: 2500 !important; /* Editörün (1050) kat kat üstüne çıkarır */
+}
+
+.bannerRight {
+  position: relative !important;
+  z-index: 2600 !important;
+  display: flex !important;
+  align-items: center !important;
+  flex-shrink: 0 !important;
+}
+
+#settingsOpenBtn {
+  position: relative !important;
+  z-index: 2700 !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
