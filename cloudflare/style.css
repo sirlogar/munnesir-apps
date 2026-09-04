@@ -880,3 +880,34 @@ select.selectInput, select.statusSelect {
   color: var(--text-primary) !important;
   border-radius: 8px;
 }
+
+
+/* AYARLAR BUTONUNU EKRANA VE RENGE SABİTLEME */
+.bannerRight {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  z-index: 1150 !important;
+}
+
+#settingsOpenBtn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 38px !important;
+  height: 38px !important;
+  color: var(--text-primary) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+#settingsOpenBtn svg {
+  display: block;
+  stroke: var(--text-primary);
+  transition: transform 0.3s ease;
+}
+
+#settingsOpenBtn:hover svg {
+  transform: rotate(45deg);
+}
