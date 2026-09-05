@@ -15,17 +15,6 @@
   const $ = (s) => document.querySelector(s);
   const $$ = (s) => [...document.querySelectorAll(s)];
 
-
-// APK İLE AYNI CANLI SUNUCU ADRESİNİ YAKALAYAN KÖPRÜ
-  function getApiUrl(endpoint) {
-    const baseUrl = (window.Sync && window.Sync.baseUrl) 
-      ? window.Sync.baseUrl 
-      : (window.location.origin.includes('localhost') || window.location.protocol === 'file:')
-        ? 'https://SENIN_GUNCEL_DOMAININ.com' // <-- BURAYA ŞU ANKİ AKTİF BACKEND ADRESİNİ YAZ
-        : '';
-    return `${baseUrl}${endpoint}`;
-  }
-
   function openDB() {
     return new Promise((resolve) => {
       try {
@@ -108,8 +97,6 @@
     if (isNaN(d.getTime())) return false;
     return d.getFullYear() === 2026 && d.getMonth() === 8 && d.getDate() === 4;
   }
-
-
 
 
   function plain(str) {
@@ -299,6 +286,25 @@
     $('#readerDialog')?.showModal();
   }
 
+
+  function setEditorStatus(status = 'ready') {
+    const input = $('#editorStatusSelect');
+    if (input) input.value = status;
+    
+    const labels = {
+      ready: 'Yayına Hazır',
+      draft: 'Taslak',
+      archive: 'Arşiv'
+    };
+    
+    const labelEl = $('#statusDropdownLabel');
+    if (labelEl) labelEl.textContent = labels[status] || 'Yayına Hazır';
+    
+    $$('#statusDropdownMenu .dropdownOption').forEach(opt => {
+      opt.classList.toggle('active', opt.dataset.value === status);
+    });
+  }
+
   function showEditor(poemId = null) {
     currentEditingId = poemId;
     const feed = $('#feedView');
@@ -324,12 +330,12 @@
       if (poem) {
         if ($('#editorTitleInput')) $('#editorTitleInput').value = poem.title || '';
         if ($('#editorContentInput')) $('#editorContentInput').value = poem.content || '';
-        if ($('#editorStatusSelect')) $('#editorStatusSelect').value = poem.status || 'ready';
+        if ($('setEditorStatus')) $('setEditorStatus').value = poem.status || 'ready';
       }
     } else {
       if ($('#editorTitleInput')) $('#editorTitleInput').value = '';
       if ($('#editorContentInput')) $('#editorContentInput').value = '';
-      if ($('#editorStatusSelect')) $('#editorStatusSelect').value = 'ready';
+      if ($('setEditorStatus')) $('setEditorStatus').value = 'ready';
     }
     updateEditorStats();
   }
@@ -501,7 +507,7 @@
                   <svg class="uiIcon"><use href="#icon-restore"></use></svg><span>Geri Yükle</span>
                 </button>
                 <button class="stdBtn cardActionBtn btn-danger" onclick="window.hardDeletePoem('${t.id}', event)">
-                  <svg class="uiIcon"><use href="#icon-trash"></use></svg><span>Sil</span>
+                  <svg class="uiIcon"><use href="#icon-trash"></use></svg><span>Kalıcı Sil</span>
                 </button>
               </div>
             </div>
@@ -815,6 +821,29 @@
 
     $('#readerRestoreBtn')?.addEventListener('click', (e) => {
     if (currentReadingId) window.restorePoem(currentReadingId, e);
+    });
+
+
+    // DURUM AÇILIR MENÜSÜ DİNLEYİCİSİ
+    const statusDropdown = $('#statusDropdown');
+    $('#statusDropdownBtn')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      statusDropdown?.classList.toggle('open');
+    });
+
+    $$('#statusDropdownMenu .dropdownOption').forEach(opt => {
+      opt.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setEditorStatus(opt.dataset.value);
+        statusDropdown?.classList.remove('open');
+      });
+    });
+
+    // Menü dışına tıklandığında otomatik kapatma
+    document.addEventListener('click', (e) => {
+      if (!statusDropdown?.contains(e.target)) {
+        statusDropdown?.classList.remove('open');
+      }
     });
 
   }//****** initEvents sonu ******

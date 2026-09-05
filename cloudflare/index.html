@@ -38,7 +38,9 @@
 
     <!-- Kitaplar Sembolü -->
     <symbol id="icon-books" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z"/>
+      <rect width="8" height="18" x="3" y="3" rx="1"/>
+      <path d="M7 3v18"/>
+      <path d="M20.4 18.9c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z"/>
     </symbol>
 
     <!-- Çöp Kutusu Sembolü -->
@@ -97,6 +99,55 @@
       <path d="m9 15 3-3 3 3"/><path d="M12 12v9"/>
     </symbol>
 
+    <!-- JSON İndir Sembolü -->
+    <symbol id="icon-jsonDownload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2v8"/><path d="m16 6-4 4-4-4"/>
+      <rect width="20" height="8" x="2" y="14" rx="2"/>
+      <path d="M6 18h.01"/>
+      <path d="M10 18h.01"/>
+    </symbol>
+
+    <!-- JSON Yükle Sembolü -->
+    <symbol id="icon-jsonUpload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m16 6-4-4-4 4"/><path d="M12 2v8"/>
+      <rect width="20" height="8" x="2" y="14" rx="2"/>
+      <path d="M6 18h.01"/><path d="M10 18h.01"/>
+    </symbol>
+
+    <!-- Geri Dön Sembolü -->
+    <symbol id="icon-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10.793 19.793a.707.707 0 0 0 1.207-.5V16a1 1 0 0 1 1-1h6a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1h-6a1 1 0 0 1-1-1V4.707a.707.707 0 0 0-1.207-.5l-6.94 6.94a1.207 1.207 0 0 0 0 1.707z"/>
+    </symbol>
+
+    <!-- Kaydet Sembolü -->
+    <symbol id="icon-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/>
+      <path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/>
+      <path d="M7 3v4a1 1 0 0 0 1 1h7"/>
+    </symbol>
+
+    <!-- Senkron / Yükleniyor Sembolü -->
+    <symbol id="icon-sync" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2v4"/><path d="m16.2 7.8 2.9-2.9"/>
+        <path d="M18 12h4"/><path d="m16.2 16.2 2.9 2.9"/>
+        <path d="M12 18v4"/><path d="m4.9 19.1 2.9-2.9"/>
+        <path d="M2 12h4"/><path d="m4.9 4.9 2.9 2.9"/>
+    </symbol>
+
+    <!-- Onay / Tamamlandı Sembolü -->
+    <symbol id="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 6 9 17l-5-5"/>
+    </symbol>
+
+    <!-- Yukarı Ok Sembolü -->
+    <symbol id="icon-arrowUp" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>
+    </symbol>
+
+    <!-- Aşağı Ok Sembolü -->
+    <symbol id="icon-arrowDown" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>
+    </symbol>
 
   </defs>
 </svg>
@@ -224,16 +275,36 @@
     <!-- ÜST KONTROL BARI -->
     <div class="editorHeaderBar">
       <div class="headerLeft">
-        <button id="closeEditorBtn" class="stdBtn" type="button">← Arşive Dön</button>
+
+        <button id="closeEditorBtn" class="stdBtn" type="button">
+          <svg class="uiIcon"><use href="#icon-back"></use></svg>
+          <span>Arşive Dön</span>
+        </button>
+
       </div>
       <div class="headerRight">
         <span id="editorStats" class="editorWordCount">0 kelime | 0 karakter</span>
-        <select id="editorStatusSelect" class="selectInput statusSelect">
-          <option value="ready">Yayına Hazır</option>
-          <option value="draft">Taslak</option>
-          <option value="archive">Arşiv</option>
-        </select>
-        <button id="editorSaveBtn" class="stdBtn primary" type="button">💾 Kaydet</button>
+        <!-- ÖZEL DURUM BUTONU VE AÇILIR LİSTESİ -->
+        <div class="customDropdown" id="statusDropdown">
+          <input type="hidden" id="editorStatusSelect" value="ready" />
+          <button type="button" class="stdBtn dropdownTrigger" id="statusDropdownBtn">
+            <span id="statusDropdownLabel">Yayına Hazır</span>
+            <svg class="uiIcon dropdownChevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          <div class="dropdownMenu" id="statusDropdownMenu">
+            <div class="dropdownOption active" data-value="ready">Yayına Hazır</div>
+            <div class="dropdownOption" data-value="draft">Taslak</div>
+            <div class="dropdownOption" data-value="archive">Arşiv</div>
+          </div>
+        </div>
+
+        <button id="editorSaveBtn" class="stdBtn primary" type="button">
+          <svg class="uiIcon"><use href="#icon-save"></use></svg>
+          <span>Kaydet</span>
+        </button>
+
       </div>
     </div>
 
@@ -258,8 +329,15 @@
 
   <!-- ORTA ALT ŞEFFAF YUKARI/AŞAĞI NAVİGASYON OKLARI -->
   <div class="scrollNavContainer">
-    <button id="scrollTopBtn" class="scrollNavBtn" type="button" title="En Yukarı Git">↑</button>
-    <button id="scrollBottomBtn" class="scrollNavBtn" type="button" title="En Aşağı Git">↓</button>
+
+    <button id="scrollTopBtn" class="scrollNavBtn" type="button" title="En Yukarı Git">
+      <svg class="uiIcon"><use href="#icon-arrowUp"></use></svg>
+    </button>
+
+    <button id="scrollBottomBtn" class="scrollNavBtn" type="button" title="En Aşağı Git">
+      <svg class="uiIcon"><use href="#icon-arrowDown"></use></svg>
+    </button>
+
   </div>
 
   <!-- GOOGLE KEEP USULÜ FLOATING (+) BUTONU -->
@@ -322,9 +400,18 @@
           <!-- YEDEKLEME & JSON İÇE/DIŞA AKTARMA -->
           <div class="settingGroup" style="margin-top: 15px;">
             <h3 style="font-size: 0.9rem; margin-bottom: 8px; opacity: 0.8;">JSON Arşiv / Keep Yedeği</h3>
+            
             <div style="display: flex; gap: 10px;">
-              <button id="exportJsonBtn" class="stdBtn full" type="button">📥 JSON İndir (Yedek Al)</button>
-              <button id="importJsonBtn" class="stdBtn full" type="button">📤 JSON Yükle (Keep/Arşiv)</button>
+              <button id="downloadJsonBtn" class="stdBtn full" type="button">
+                <svg class="uiIcon"><use href="#icon-jsonDownload"></use></svg>
+                <span>JSON İndir (Yedek Al)</span>
+              </button>
+              
+              <button id="uploadJsonBtn" class="stdBtn full" type="button">
+                <svg class="uiIcon"><use href="#icon-jsonUpload"></use></svg>
+                <span>JSON Yükle</span>
+              </button>
+
             </div>
           </div>
           
@@ -359,10 +446,15 @@
   <!-- KİTAP ADAYLARI POP-UP -->
   <dialog id="bookDialog" class="modalDialog" wideModal>
     <div class="modalContainer">
+
       <div class="modalHeader">
-        <h2>📚 Kitap Adayları</h2>
+        <h2 style="display: flex; align-items: center; gap: 8px;">
+          <svg class="uiIcon" style="width: 24px !important; height: 24px !important;"><use href="#icon-books"></use></svg>
+          Kitap Adayları
+        </h2>
         <button id="closeBookBtn" class="iconBtn" type="button">✕</button>
       </div>
+
       <div class="modalBody" id="bookListContainer">
         <p>Henüz kitap adayı eklenmemiş.</p>
       </div>
@@ -373,7 +465,10 @@
   <dialog id="trashDialog" class="modalDialog" wideModal>
     <div class="modalContainer">
       <div class="modalHeader">
-        <h2>🗑 Çöp Kutusu</h2>
+        <h2 style="display: flex; align-items: center; gap: 8px;">
+          <svg class="uiIcon" style="width: 24px !important; height: 24px !important;"><use href="#icon-trash"></use></svg>
+          Çöp Kutusu
+        </h2>
         <button id="closeTrashBtn" class="iconBtn" type="button">✕</button>
       </div>
       <div class="modalBody" id="trashListContainer">

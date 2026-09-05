@@ -81,11 +81,21 @@
     else console.log(text); 
   }
 
-  function setStatus(text, tone) {
-    const el = qs('#syncStatusText') || qs('#syncAdvStatusText');
-    if (!el) return;
-    el.textContent = text;
-    el.dataset.tone = tone || 'idle';
+  function setStatus(msg, type = 'info') {
+    const icons = {
+      working: '<svg class="uiIcon spin"><use href="#icon-sync"></use></svg>',
+      ok: '<svg class="uiIcon" style="color: #22c55e;"><use href="#icon-check"></use></svg>',
+      error: '<svg class="uiIcon" style="color: #ef4444;"><use href="#icon-close"></use></svg>',
+      info: '<svg class="uiIcon"><use href="#icon-sync"></use></svg>'
+    };
+
+    const html = `${icons[type] || ''}<span>${msg}</span>`;
+
+    const statusEl = document.getElementById('syncStatusText');
+    const advStatusEl = document.getElementById('syncAdvStatusText');
+
+    if (statusEl) statusEl.innerHTML = html;
+    if (advStatusEl) advStatusEl.innerHTML = html;
   }
 
   async function api(path, options = {}) {
@@ -291,7 +301,7 @@
     if (isSyncing) return;
     isSyncing = true;
     try {
-      if (!silent) setStatus('⏳ Senkron başlıyor...', 'working');
+      if (!silent) setStatus('Senkron başlıyor...', 'working');
       const local = await localSnapshot();
       const remote = await fetchCloudSnapshot();
       const merged = mergeSnapshots(local, remote.payload);
@@ -299,7 +309,7 @@
       const result = await uploadSnapshot(merged);
       lastLocalHash = await localHash();
       initialHashReady = true;
-      setStatus(`✓ Senkron tamam: ${merged.poems.length} şiir.`, 'ok');
+      setStatus(`Senkron tamam: ${merged.poems.length} şiir.`, 'ok');
       return result;
     } finally {
       isSyncing = false;
@@ -307,24 +317,24 @@
   }
 
   async function uploadLocalOnly() {
-    setStatus('⏳ Yerel arşiv buluta gönderiliyor...', 'working');
+    setStatus('Yerel arşiv buluta gönderiliyor...', 'working');
     const payload = await localSnapshot();
     const result = await uploadSnapshot(payload);
     lastLocalHash = await localHash();
     initialHashReady = true;
-    setStatus('✓ Yerel arşiv buluta gönderildi.', 'ok');
+    setStatus('Yerel arşiv buluta gönderildi.', 'ok');
     return result;
   }
 
   async function downloadCloudOnly() {
-    setStatus('⏳ Bulut arşivi indiriliyor...', 'working');
+    setStatus('Bulut arşivi indiriliyor...', 'working');
     const row = await fetchCloudSnapshot();
     if (!row || !row.payload) throw new Error('Bulutta henüz Munnesir yedeği yok.');
     await applySnapshot(row.payload);
     saveConfig({ revision: row.revision || 0, lastSyncAt: stamp() });
     lastLocalHash = await localHash();
     initialHashReady = true;
-    setStatus('✓ Bulut arşivi bu cihaza alındı.', 'ok');
+    setStatus('Bulut arşivi bu cihaza alındı.', 'ok');
   }
 
   async function runSafely(fn, silent = false) {
@@ -332,7 +342,7 @@
     catch (err) {
       console.error(err);
       const message = err.message || 'Senkron hatası.';
-      setStatus(`❌ ${message}`, 'error');
+      setStatus(`${message}`, 'error');
     }
   }
 
@@ -443,24 +453,24 @@
     }
     const ok = await api('/api/auth/status').catch(() => null);
     if (ok && ok.ok) {
-      setStatus('✓ Bağlı. Anlık senkron açık.', 'ok');
+      setStatus('Bağlı. Anlık senkron açık.', 'ok');
       saveConfig({ revision: ok.revision || cfg.revision || 0 });
       startRealtimeLoop();
     } else {
       // Token patlamış ama şifre duruyorsa otomatik giriş yap
       const savedPass = localStorage.getItem('munnesir_sync_pass');
       if (savedPass) {
-        setStatus('⏳ Oturum yenileniyor...', 'working');
+        setStatus('Oturum yenileniyor...', 'working');
         try {
           const data = await api('/api/auth/login', { method: 'POST', body: { password: savedPass } });
           saveConfig({ token: data.token || '', revision: Number(data.revision || 0), lastSyncAt: stamp() });
-          setStatus('✓ Bağlı. Anlık senkron açık.', 'ok');
+          setStatus('Bağlı. Anlık senkron açık.', 'ok');
           startRealtimeLoop();
         } catch(e) {
-          setStatus('❌ Oturum yenilenemedi. Şifre ile tekrar gir.', 'error');
+          setStatus('Oturum yenilenemedi. Şifre ile tekrar gir.', 'error');
         }
       } else {
-        setStatus('❌ Oturum süresi dolmuş. Şifre ile tekrar gir.', 'error');
+        setStatus('Oturum süresi dolmuş. Şifre ile tekrar gir.', 'error');
       }
     }
   }
