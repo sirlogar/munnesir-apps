@@ -368,6 +368,19 @@
       $('#sidebar')?.classList.toggle('open');
     });
 
+    // SİDEBAR DIŞINA (BOŞLUĞA) TIKLAYINCA KAPATMA
+    document.addEventListener('click', (e) => {
+      const sidebar = $('#sidebar');
+      const toggleBtn = $('#sidebarToggle');
+
+      if (sidebar?.classList.contains('open')) {
+        // Tıklanan yer menünün veya menü butonunun kendisi değilse menüyü kapat
+        if (!sidebar.contains(e.target) && !toggleBtn?.contains(e.target)) {
+          sidebar.classList.remove('open');
+        }
+      }
+    });
+
     $('#scrollTopBtn')?.addEventListener('click', () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     });
