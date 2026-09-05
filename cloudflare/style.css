@@ -79,16 +79,19 @@ body {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  padding: 0 20px;
+  padding: 0 16px !important;
   z-index: 2500;
   box-sizing: border-box;
+  overflow: hidden !important; /* Ekrana sığmayan öğeleri içeride tutar */
 }
 
 .bannerLeft { 
   display: flex !important; 
   align-items: center !important; 
-  gap: 16px; 
-  flex: 0 0 auto !important; /* flex: 1 tamamen iptal, sadece içeriği kadar yer tutar */
+  gap: 12px !important; 
+  flex: 1 1 auto !important; /* Mevcut boşluğu doldurur, daralınca küçülür */
+  min-width: 0 !important;   /* Yazı taşmasını engelleyen hayati kilit */
+  overflow: hidden !important;
 }
 
 .bannerRight {
@@ -103,28 +106,42 @@ body {
 #settingsOpenBtn {
   width: 40px !important;
   height: 40px !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  background: none;
-  border: none;
-  color: var(--text-primary);
-  cursor: pointer;
-  padding: 0;
+  background: none !important;
+  border: none !important;
+  color: var(--text-primary) !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  flex-shrink: 0 !important;
 }
 
 #settingsOpenBtn .uiIcon {
   width: 22px !important;
   height: 22px !important;
-  stroke: var(--text-primary);
-  display: block;
+  stroke: currentColor !important;
+  display: block !important;
+}
+
+/* AYARLAR VE SENKRON İÇİN DOKUNULMAZ SAĞ KUTU */
+.bannerActions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex: 0 0 auto !important;  /* Ekran ne kadar daralırsa daralsın ASLA büzülmez */
+  flex-shrink: 0 !important;  /* Genişliği 40px altına düşemez */
+  margin-left: 10px !important;
 }
 
 .brandTop { 
-  display: flex; 
-  align-items: center; 
-  gap: 10px; 
-  min-width: 0; /* Taşma kilidi 2 */
+  display: flex !important; 
+  align-items: center !important; 
+  gap: 10px !important; 
+  min-width: 0 !important;
+  overflow: hidden !important;
 }
 .brandLogo {
   width: 34px; 
@@ -337,9 +354,10 @@ body {
 
 /* HEADER FONT VE ALT YAZI STİLİ */
 .brandTextGroup {
-  display: flex;
-  flex-direction: column;
-  min-width: 0; /* Taşma kilidi 3 */
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
 }
 
 .brandTitle {
@@ -352,14 +370,15 @@ body {
 }
 
 .brandSubtitle {
-  font-family: 'Tinos', serif;
-  font-size: 0.72rem;
-  font-style: italic;
-  color: var(--subtext-color, rgba(255,255,255,0.65));
-  margin-top: 2px;
-  white-space: nowrap;
-  overflow: hidden; /* Sığmayan yazıyı gizler */
-  text-overflow: ellipsis; /* Sığmayan kısmın sonuna zarifçe ... koyar */
+  font-family: 'Tinos', serif !important;
+  font-size: 0.72rem !important;
+  font-style: italic !important;
+  color: var(--subtext-color, rgba(255, 255, 255, 0.65)) !important;
+  margin-top: 2px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 100% !important;
 }
 
 
