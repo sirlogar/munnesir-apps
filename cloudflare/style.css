@@ -1203,3 +1203,71 @@ dialog.modalDialog.wideModal .modalBody {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+
+/* GOOGLE KEEP TARZI ETİKET POP-UP ESTETİĞİ */
+.keepTagList {
+  max-height: 250px;
+  overflow-y: auto;
+  padding: 10px 24px;
+}
+
+.tagSelectionItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  border-bottom: 1px solid var(--border-color);
+  transition: opacity 0.2s;
+}
+
+.tagSelectionItem:last-child {
+  border-bottom: none;
+}
+
+.tagSelectionItem:hover {
+  opacity: 0.8;
+}
+
+.tagSelectionItem input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent-color);
+  cursor: pointer;
+}
+
+.keepTagCreator {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* EDİTÖR İÇİ SEÇİLİ ETİKET ROZETLERİ */
+.editorTagBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-color);
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  color: var(--text-primary);
+}
+
+
+/* ÇARPI VE TÜM İKON BUTONLARINDAKİ ODAKLANMA ÇERÇEVESİNİ SIFIRLAMA */
+.iconBtn,
+.iconBtn:focus,
+.iconBtn:focus-visible,
+.iconBtn:active {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent !important; /* Mobilde dokununca çıkan gri/mavi lekeyi de yok eder */
+}

@@ -1,6 +1,7 @@
 (function() {
   let db = null;
   let currentEditingId = null;
+  let currentEditorTags = []; // Pop-up'ta seçilen etiketleri hafızada tutar
   let currentSelectedFont = 'font-tinos';
   let currentReadingId = null;
 
@@ -119,20 +120,27 @@
     const activePoems = state.poems.filter(p => !p.trashedAt && p.status !== 'trash' && p.status !== 'deleted');
 
     const tagCounts = {};
+    const tagDisplayMap = {};
+
     activePoems.forEach(p => {
       if (Array.isArray(p.tags)) {
-        p.tags.forEach(t => {
-          if (t && t !== '(boş)') {
-            const clean = t.trim();
-            tagCounts[clean] = (tagCounts[clean] || 0) + 1;
+        // Şiir içindeki mükerrer etiketleri tekilleştir (1 şiirde 2 kez #deneme varsa 1 sayılsın)
+        const seenInPoem = new Set();
+        p.tags.forEach(rawTag => {
+          if (!rawTag || rawTag === '(boş)') return;
+          const clean = rawTag.trim();
+          const key = clean.toLowerCase('tr');
+          if (!seenInPoem.has(key)) {
+            seenInPoem.add(key);
+            tagCounts[key] = (tagCounts[key] || 0) + 1;
+            if (!tagDisplayMap[key]) tagDisplayMap[key] = clean;
           }
         });
       }
     });
 
-    const sortedTags = Object.keys(tagCounts).sort((a, b) => a.localeCompare(b, 'tr'));
+    const sortedKeys = Object.keys(tagCounts).sort((a, b) => a.localeCompare(b, 'tr'));
     
-    // Sayıyı tamamen aktif şiirlerin sayısına eşitle
     let html = `
       <button class="tagItem ${!state.selectedTag ? 'active' : ''}" data-tag="">
         <span>#(tümü)</span>
@@ -140,12 +148,13 @@
       </button>
     `;
 
-    sortedTags.forEach(tag => {
-      const active = state.selectedTag === tag ? 'active' : '';
+    sortedKeys.forEach(key => {
+      const displayTag = tagDisplayMap[key];
+      const active = state.selectedTag && state.selectedTag.toLowerCase('tr') === key ? 'active' : '';
       html += `
-        <button class="tagItem ${active}" data-tag="${tag}">
-          <span>#${plain(tag)}</span>
-          <small style="opacity:0.6;">${tagCounts[tag]}</small>
+        <button class="tagItem ${active}" data-tag="${plain(displayTag)}">
+          <span>#${plain(displayTag)}</span>
+          <small style="opacity:0.6;">${tagCounts[key]}</small>
         </button>
       `;
     });
@@ -188,8 +197,11 @@
     }
 
     if (state.selectedTag) {
-      // Sadece kesin etiket dizisine bakar, metin içindeki boşluklu tesadüfleri eler
-      list = list.filter(p => Array.isArray(p.tags) && p.tags.includes(state.selectedTag));
+      const target = state.selectedTag.trim().toLowerCase('tr');
+      list = list.filter(p => 
+        Array.isArray(p.tags) && 
+        p.tags.some(t => t && t.trim().toLowerCase('tr') === target)
+      );
     }
 
     if (state.searchQuery) {
@@ -338,6 +350,23 @@
       if ($('setEditorStatus')) $('setEditorStatus').value = 'ready';
     }
     updateEditorStats();
+
+    if (poemId) {
+      const poem = state.poems.find(p => p.id === poemId);
+      currentEditorTags = poem && Array.isArray(poem.tags) ? [...poem.tags] : [];
+    } else {
+      currentEditorTags = [];
+    }
+    updateEditorTagsDisplay();
+
+  }
+
+  function updateEditorTagsDisplay() {
+    const displayEl = $('#editorTagsDisplay');
+    if (!displayEl) return;
+    displayEl.innerHTML = currentEditorTags.map(tag => 
+      `<span class="editorTagBadge">#${plain(tag)}</span>`
+    ).join('');
   }
 
   function hideEditor() {
@@ -750,9 +779,7 @@
       if (!content) return;
 
       const selectedStatus = $('#editorStatusSelect')?.value || 'ready';
-      // Rakamlar (0-9) ve alt tire (_) eklendi, boşluklarda otomatik keser
-      const extractedTags = (content.match(/#[\wığüşöçİĞÜŞÖÇ0-9_]+/g) || []).map(t => t.replace('#', ''));
-
+      
       // Eski şiirin fontunu koru, yeni şiirse Tinos yap
       let existingFont = 'font-tinos';
       if (currentEditingId) {
@@ -760,11 +787,12 @@
         if (oldPoem && oldPoem.fontFamily) existingFont = oldPoem.fontFamily;
       }
 
+      // Hatalı kısımlar temizlendi, tek ve doğru data objesi:
       const poemData = {
         id: currentEditingId || `poem-${Date.now()}`,
         title,
         content,
-        tags: extractedTags,
+        tags: currentEditorTags.length > 0 ? currentEditorTags : ['(boş)'], // Pop-up'tan gelenler
         fontFamily: existingFont,
         status: selectedStatus,
         updatedAt: new Date().toISOString(),
@@ -780,22 +808,70 @@
 
       // Görsel Geri Bildirim
       const saveBtn = $('#editorSaveBtn');
-      const originalText = saveBtn.innerHTML;
-      saveBtn.innerHTML = '✓ Kaydedildi';
-      saveBtn.classList.add('active');
-      
-      setTimeout(() => {
-        saveBtn.innerHTML = originalText;
-        saveBtn.classList.remove('active');
-      }, 2000);
+      if (saveBtn) {
+        const originalText = saveBtn.innerHTML;
+
+        saveBtn.innerHTML = '<svg class="uiIcon"><use href="#icon-check"></use></svg><span>Kaydedildi</span>';
+
+        saveBtn.classList.add('active');
+        
+        setTimeout(() => {
+          saveBtn.innerHTML = originalText;
+          saveBtn.classList.remove('active');
+        }, 2000);
+      }
     });
 
+    // ETİKET YÖNETİMİ POP-UP'INI AÇMA VE DOLDURMA
     $('#editorAddTagBtn')?.addEventListener('click', () => {
-      const input = $('#editorContentInput');
-      if (input) {
-        input.value += ' #yeniEtiket';
-        input.focus();
-        updateEditorStats();
+      const listEl = $('#tagSelectionList');
+      const allTags = new Set();
+      
+      // Veritabanındaki mevcut tüm etiketleri topla
+      state.poems.forEach(p => {
+        if (!p.trashedAt && p.status !== 'trash' && p.status !== 'deleted' && Array.isArray(p.tags)) {
+          p.tags.forEach(t => { if (t && t !== '(boş)') allTags.add(t.trim()); });
+        }
+      });
+      // O an eklenmiş ama henüz veritabanına inmemiş yeni etiketleri de listeye kat
+      currentEditorTags.forEach(t => { if (t && t !== '(boş)') allTags.add(t.trim()); });
+
+      const sortedTags = Array.from(allTags).sort((a, b) => a.localeCompare(b, 'tr'));
+
+      if (listEl) {
+        listEl.innerHTML = sortedTags.map(tag => {
+          const isChecked = currentEditorTags.includes(tag);
+          return `
+            <label class="tagSelectionItem">
+              <input type="checkbox" value="${plain(tag)}" ${isChecked ? 'checked' : ''} />
+              <span>${plain(tag)}</span>
+            </label>
+          `;
+        }).join('');
+      }
+
+      document.body.classList.add('modal-open');
+      $('#tagSelectionDialog')?.showModal();
+    });
+
+    // POP-UP İÇİ BUTON FONKSİYONLARI
+    $('#closeTagSelectionBtn')?.addEventListener('click', () => $('#tagSelectionDialog')?.close());
+
+    $('#saveSelectedTagsBtn')?.addEventListener('click', () => {
+      const checkedBoxes = $$('#tagSelectionList input[type="checkbox"]:checked');
+      currentEditorTags = checkedBoxes.map(cb => cb.value);
+      updateEditorTagsDisplay();
+      $('#tagSelectionDialog')?.close();
+    });
+
+    $('#addNewTagBtn')?.addEventListener('click', () => {
+      let newVal = $('#newTagCreateInput')?.value.trim();
+      if (newVal) {
+        // Boşlukları alt tire yapar, kullanıcı # yazdıysa otomatik temizler
+        newVal = newVal.replace(/\s+/g, '_').replace(/^#/, '');
+        if (!currentEditorTags.includes(newVal)) currentEditorTags.push(newVal);
+        $('#newTagCreateInput').value = '';
+        $('#editorAddTagBtn').click(); // Listeyi güncelleyerek yeniden açar
       }
     });
 

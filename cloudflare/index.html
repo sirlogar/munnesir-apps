@@ -152,6 +152,13 @@
       <path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>
     </symbol>
 
+    <!-- Etiket (Tag) Sembolü -->
+    <symbol id="icon-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/>
+      <circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/>
+    </symbol>
+
+
   </defs>
 </svg>
 
@@ -319,12 +326,23 @@
     </div>
 
     <!-- ALT ARAÇ ÇUBUĞU -->
-    <div class="editorFooterBar">
-      <div class="footerLeft">
-        <button id="editorAddTagBtn" class="stdBtn" type="button"># Etiket Ekle</button>
-      </div>
-      <div class="footerRight">
-        <button id="editorShareBtn" class="stdBtn" type="button">🔗 Paylaş</button>
+    <div class="editorFooterBar" style="flex-direction: column; align-items: stretch; gap: 12px; height: auto;">
+      <!-- SEÇİLİ ETİKETLER GÖSTERİM ALANI -->
+      <div id="editorTagsDisplay" style="display: flex; gap: 6px; flex-wrap: wrap; min-height: 24px;"></div>
+      
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="footerLeft">
+          <button id="editorAddTagBtn" class="stdBtn" type="button">
+            <svg class="uiIcon"><use href="#icon-tag"></use></svg>
+            <span>Etiketleri Yönet</span>
+          </button>
+        </div>
+        <div class="footerRight">
+          <button id="editorShareBtn" class="stdBtn" type="button">
+            <svg class="uiIcon"><use href="#icon-share"></use></svg>
+            <span>Etiketleri Yönet</span>
+          </button>
+        </div>
       </div>
     </div>
     
@@ -521,6 +539,36 @@
           </button>
         </div>
 
+      </div>
+    </div>
+  </dialog>
+
+
+  <!-- ETİKET SEÇİM POP-UP (GOOGLE KEEP STİLİ) -->
+  <dialog id="tagSelectionDialog" class="modalDialog">
+    <div class="modalContainer">
+      <div class="modalHeader">
+        <h2 style="display: flex; align-items: center; gap: 8px;">
+          <svg class="uiIcon" style="width: 20px !important; height: 20px !important;"><use href="#icon-tag"></use></svg>
+          Etiketleri Düzenle
+        </h2>
+        <button id="closeTagSelectionBtn" class="iconBtn" type="button">✕</button>
+      </div>
+      
+      <div class="modalBody" style="padding: 0;">
+        <!-- Mevcut etiketlerin listesi (Onay kutulu) -->
+        <div id="tagSelectionList" class="keepTagList"></div>
+        
+        <!-- Yeni etiket ekleme alanı -->
+        <div class="keepTagCreator">
+          <input type="text" id="newTagCreateInput" class="textInput" placeholder="Yeni etiket adı..." />
+          <button id="addNewTagBtn" class="stdBtn primary" type="button" style="width: 42px; padding: 0;">+</button>
+        </div>
+      </div>
+      
+      <!-- Alt onay butonu -->
+      <div class="modalBody" style="padding-top: 0; padding-bottom: 24px;">
+         <button id="saveSelectedTagsBtn" class="stdBtn full primary" type="button">Etiketleri Uygula</button>
       </div>
     </div>
   </dialog>
