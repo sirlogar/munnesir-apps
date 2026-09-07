@@ -1271,3 +1271,415 @@ dialog.modalDialog.wideModal .modalBody {
   box-shadow: none !important;
   -webkit-tap-highlight-color: transparent !important; /* Mobilde dokununca çıkan gri/mavi lekeyi de yok eder */
 }
+
+
+/* KİTAP ADAYLARI YÖNETİM PANELİ */
+.bookSelectorPanel {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 14px;
+  margin: 12px 24px 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.selectorTopBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.candidateBadge {
+  font-size: 0.8rem;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: var(--accent-color, #8b5cf6);
+  color: #fff;
+  white-space: nowrap;
+}
+
+.bookPickRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+}
+
+.bookPickRow:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.bookPickRow label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  width: 100%;
+}
+
+
+/* POP-UP YATAY TAŞMAYI VE KAYMAYI KESEN EVRENSEL KURALLAR */
+.bookModalContainer {
+  width: 100% !important;
+  max-width: min(760px, 94vw) !important;
+  box-sizing: border-box !important;
+  overflow-x: hidden !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+}
+
+#bookDialog, #bookDialog .modalContainer, #bookDialog .modalBody {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  overflow-x: hidden !important;
+}
+
+/* OKUMA MODU BUTON HİZALAMASI (SİL BUTONUNU SAĞA YASLAMA) */
+#readerStandardActions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+#readerSoftDeleteBtn {
+  margin-left: auto !important;
+}
+
+
+/* EDİTÖR ALT BARI: SAĞA VE SOLA YASLAMA */
+.editorFooterBar {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  padding: 12px 24px !important;
+  background: var(--bg-sidebar) !important;
+  border-top: 1px solid var(--border-color) !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
+
+.editorFooterRow {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+}
+
+.footerLeft {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+}
+
+.footerRight {
+  margin-left: auto !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+
+
+/* KİTAP PROJELERİ MODAL HİZALAMALARI */
+.bookModalContainer {
+  width: 95% !important;
+  max-width: 820px !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  max-height: 85vh !important;
+}
+
+.bookAssignContainer {
+  width: 92% !important;
+  max-width: 420px !important;
+  box-sizing: border-box !important;
+}
+
+.bookControlBar {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  padding: 12px 24px !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  background: rgba(255, 255, 255, 0.02) !important;
+  flex-wrap: wrap !important;
+}
+
+.bookSelectInput {
+  flex: 1 1 200px !important;
+  min-width: 180px !important;
+  height: 38px !important;
+  padding: 4px 12px !important;
+  background: var(--bg-card, #1e1e24) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 8px !important;
+}
+
+.bookControlActions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.bookModalBody {
+  flex: 1 1 auto !important;
+  overflow-y: auto !important;
+  padding: 20px 24px !important;
+  box-sizing: border-box !important;
+}
+
+.bookModalBody.poemGrid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+  gap: 16px !important;
+  width: 100% !important;
+}
+
+
+/* KİTAP VE ARAMA PANELİ KUSURSUZ HİZALAMALARI */
+.bookControlBar {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  padding: 16px 24px !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  background: var(--bg-sidebar) !important;
+  flex-wrap: wrap !important;
+}
+
+.bookSelectInput {
+  flex: 1 1 250px !important;
+  min-width: 200px !important;
+  margin: 0 !important;
+}
+
+.bookControlActions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+}
+
+.bookAssignFromBookPanel {
+  padding: 16px 24px !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  background: rgba(0, 0, 0, 0.1) !important;
+}
+
+.bookAssignFromBookPanel .textInput {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+}
+
+/* ONAY KUTULARI VE METİN HİZASI */
+.tagSelectionItem {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 12px 16px !important;
+  cursor: pointer !important;
+  border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+  margin: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.tagSelectionItem:last-child {
+  border-bottom: none !important;
+}
+
+.tagSelectionItem input[type="checkbox"] {
+  margin: 0 !important;
+  width: 18px !important;
+  height: 18px !important;
+  flex-shrink: 0 !important;
+}
+
+
+/* POP-UP'LARI EKRANIN TAM ORTASINA ÇİVİLEME VE TAŞMA KİLİDİ */
+#bookDialog, #bookAssignDialog {
+  margin: auto !important; /* Tarayıcının pop-up'ı dikey ve yatay tam ortalamasını garanti eder */
+}
+
+.bookModalContainer {
+  width: 92vw !important;
+  max-width: 800px !important;
+  margin: auto !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: column !important;
+  max-height: 85vh !important;
+}
+
+.bookAssignContainer {
+  width: 92vw !important;
+  max-width: 420px !important;
+  margin: auto !important;
+  box-sizing: border-box !important;
+}
+
+/* YENİ BUTON VE ARAMA PANELİ HİZALAMASI */
+.bookControlBar {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  padding: 16px 20px !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  flex-wrap: wrap !important;
+}
+
+.bookAssignFromBookPanel {
+  padding: 12px 20px !important;
+  background: rgba(0, 0, 0, 0.1) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+
+/* KİTAP PROJELERİ POP-UP (YATAYDA DARALTILDI VE KENAR BOŞLUKLARI EKLENDİ) */
+.bookModalContainer {
+  width: 92vw !important;
+  max-width: 650px !important; /* Yatayda kısaltıldı (Eski 800px'di) */
+  padding: 24px !important; /* Kenarlara 0'a 0 yapışmayı engeller, standart boşluk verir */
+  margin: auto !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: column !important;
+  max-height: 85vh !important;
+}
+
+/* İçteki arama ve buton barlarının estetiği (Ana kutuya oturdukları için köşeleri yuvarlatıldı) */
+.bookControlBar, .bookAssignFromBookPanel {
+  border-radius: 8px !important;
+}
+
+
+/* POP-UP'IN GENEL GENİŞLİĞİNİ DARALTIYORUZ */
+.bookModalContainer {
+  width: 92vw !important;
+  max-width: 620px !important; /* 800px'den 620px'e düşürdük, yatayda ciddi kısalacak */
+  margin: auto !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: column !important;
+  max-height: 85vh !important;
+}
+
+/* AÇILIR MENÜNÜN (KİTAP İSMİ) UZAMASINI KESİYORUZ */
+.bookSelectInput {
+  flex: 0 1 240px !important; /* flex-grow değerini 0 yaparak sınırsız uzamayı durdurduk */
+  width: 240px !important; /* Kutuya sabit ve estetik bir genişlik verdik */
+  min-width: 150px !important;
+  margin: 0 !important;
+  text-overflow: ellipsis !important; /* Yazı çok uzunsa sığmayan kısmı ... yapar */
+}
+
+
+/* KİTAP PROJELERİ POP-UP'INI YATAYDA YARI YARIYA KÜÇÜLTME */
+#bookDialog .bookModalContainer {
+  width: 95vw !important;
+  max-width: 650px !important; /* Devasa genişliği tam yarı yarıya kesen kritik değer */
+  margin: auto !important;
+  box-sizing: border-box !important;
+}
+
+/* Daralan alanda arama çubuğu ve butonların taşmaması için esneklik */
+#bookDialog .bookControlBar {
+  justify-content: center !important;
+}
+
+
+/* DIŞ GRİ ÇERÇEVEYİ İÇERİĞE GÖRE DARALTMA VE SIKIŞTIRMA */
+dialog#bookDialog {
+  width: 92vw !important;
+  max-width: 650px !important; /* Kocaman gri alanı daraltıp içeriğe tam oturtur */
+  margin: auto !important;
+}
+
+/* İç çerçevenin dış kutuyu tam doldurması için */
+dialog#bookDialog .bookModalContainer {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 16px !important; /* İçeriğin kenarlara çok yapışmaması için ufak bir nefes boşluğu */
+}
+
+
+/* KİTAP SEÇ MODALININ DIŞ GRİ ÇERÇEVESİNİ İÇERİĞE GÖRE DARALTMA */
+dialog#bookAssignDialog {
+  width: 92vw !important;
+  max-width: 420px !important; /* Dış çerçeveyi tam olarak iç kutu boyutuna hapseder */
+  margin: auto !important;
+}
+
+/* İç kutunun dış çerçeveyi tam doldurmasını garantileme */
+dialog#bookAssignDialog .bookAssignContainer {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+
+/* KİTAP POP-UPLARINI EKRANIN TAM MERKEZİNE SABİTLEME */
+dialog#bookDialog, 
+dialog#bookAssignDialog {
+  position: fixed !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  margin: auto !important;
+}
+
+
+/* ÇAKIŞMAYI GİDEREN VE KİTAP POP-UPLARINI TAM MERKEZE KİLİTLEYEN KURAL */
+dialog#bookDialog, 
+dialog#bookAssignDialog {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  bottom: auto !important;
+  right: auto !important;
+  transform: translate(-50%, -50%) !important; /* Çarpışmayı çözen asıl merkezleme kilidi */
+  margin: 0 !important;
+  width: 92vw !important;
+}
+
+/* Sadece Dış Gri Çerçeve Genişlikleri */
+dialog#bookDialog {
+  max-width: 650px !important;
+}
+dialog#bookAssignDialog {
+  max-width: 420px !important;
+}
+
+/* İç Kutu Taşma Engeli */
+dialog#bookDialog .bookModalContainer,
+dialog#bookAssignDialog .bookAssignContainer {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+
+/* LOGO VE YAZI ALANINI TIKLANABİLİR ANA SAYFA BUTONU YAPMA */
+#homeLogoBtn {
+  cursor: pointer !important;
+  transition: opacity 0.2s ease !important;
+}
+
+#homeLogoBtn:hover {
+  opacity: 0.8 !important;
+}

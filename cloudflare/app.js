@@ -403,12 +403,50 @@
       const toggleBtn = $('#sidebarToggle');
 
       if (sidebar?.classList.contains('open')) {
-        // Tıklanan yer menünün veya menü butonunun kendisi değilse menüyü kapat
-        if (!sidebar.contains(e.target) && !toggleBtn?.contains(e.target)) {
+        const isAnyModalOpen = document.querySelector('dialog[open]');
+        
+        // Tıklanan yer menü, buton veya HERHANGİ BİR POP-UP'IN İÇİ (çarpı butonu dahil) DEĞİLSE kapat
+        if (!sidebar.contains(e.target) && !toggleBtn?.contains(e.target) && !isAnyModalOpen && !e.target.closest('dialog')) {
           sidebar.classList.remove('open');
         }
       }
     });
+
+
+    // LOGO VE YAZIYA TIKLAYINCA ANA SAYFAYA DÖNME (RESET)
+    $('#homeLogoBtn')?.addEventListener('click', () => {
+      // 1. Editör açıksa güvenlice arşive dön
+      const editor = $('#editorView');
+      if (editor && !editor.hidden && typeof hideEditor === 'function') {
+        hideEditor();
+      }
+      
+      // 2. Ekranda açık okuma veya ayarlar penceresi varsa kapat
+      $$('dialog[open]').forEach(d => d.close());
+
+      // 3. Filtreleri, aramaları ve etiketleri sıfırla
+      state.selectedTag = '';
+      state.selectedStatus = 'all';
+      state.searchQuery = '';
+      
+      if ($('#searchInput')) $('#searchInput').value = '';
+      if ($('#tagEditBox')) $('#tagEditBox').hidden = true;
+      
+      // 4. Sol menüdeki buton görünümünü "Tümü"ne al
+      $$('#statusFilters button').forEach(b => b.classList.remove('active'));
+      const allBtn = document.querySelector('#statusFilters button[data-status="all"]');
+      if (allBtn) allBtn.classList.add('active');
+
+      // 5. Sidebar'ı kapat
+      $('#sidebar')?.classList.remove('open');
+
+      // 6. En üste kaydır ve akışı yenile
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      renderTags();
+      renderFeed();
+    });
+
+
 
     $('#scrollTopBtn')?.addEventListener('click', () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -446,6 +484,16 @@
     $('#closeSyncAdvBtn')?.addEventListener('click', () => $('#syncAdvDialog')?.close());
 
     $('#closeReaderBtn')?.addEventListener('click', () => $('#readerDialog')?.close());
+    
+    // SADECE OKUMA PENCERESİNDE ARKA PLANA (BOŞLUĞA) TIKLAYINCA KAPANMA
+    const readerDialog = $('#readerDialog');
+    readerDialog?.addEventListener('click', (e) => {
+      // Eğer tıklanan nokta doğrudan arka plan karartmasıysa pencereyi kapat
+      if (e.target === readerDialog) {
+        readerDialog.close();
+      }
+    });
+
     $('#closeBookBtn')?.addEventListener('click', () => $('#bookDialog')?.close());
     $('#closeTrashBtn')?.addEventListener('click', () => $('#trashDialog')?.close());
 
@@ -487,15 +535,19 @@
     });
 
 
-    // KİTAP ADAYLARI
-    $('#bookViewBtn')?.addEventListener('click', () => {
-      document.body.classList.add('modal-open'); // ARKA PLAN KAYMA KİLİDİ
+
+    // KİTAP ADAYLARI POP-UP VE YÖNETİM MERKEZİ
+    let tempCandidateIds = new Set();
+
+    function renderBookListModal() {
       const localBooks = JSON.parse(localStorage.getItem('munnesir-books') || '[]');
       const bookPoemIds = new Set();
       localBooks.forEach(b => (b.poemIds || []).forEach(id => bookPoemIds.add(id)));
 
-      const books = state.poems.filter(p => p.isBookCandidate || p.status === 'book' || bookPoemIds.has(p.id));
+      const books = state.poems.filter(p => !p.trashedAt && (p.isBookCandidate || p.status === 'book' || bookPoemIds.has(p.id)));
       const container = $('#bookListContainer');
+
+      if (!container) return;
 
       if (books.length) {
         container.className = "poemGrid";
@@ -520,9 +572,99 @@
         `).join('');
       } else {
         container.className = "modalBody";
-        container.innerHTML = '<p>Henüz kitap adayı olarak işaretlenmiş bir çalışma bulunamadı.</p>';
+        container.innerHTML = '<p style="text-align: center; opacity: 0.7; padding: 20px 0;">Henüz kitap adayı olarak işaretlenmiş bir çalışma bulunamadı.<br>Yukarıdaki butonla şiir seçebilirsiniz.</p>';
       }
+    }
+
+    function renderCandidateChecklist(filterQuery = '') {
+      const listEl = $('#bookCandidateCheckList');
+      if (!listEl) return;
+
+      const activePoems = state.poems.filter(p => !p.trashedAt && p.status !== 'trash');
+      const q = filterQuery.toLowerCase('tr');
+      const filtered = q ? activePoems.filter(p => (p.title || '').toLowerCase('tr').includes(q) || (p.content || '').toLowerCase('tr').includes(q)) : activePoems;
+
+      listEl.innerHTML = filtered.map(p => {
+        const isChecked = tempCandidateIds.has(p.id);
+        return `
+          <div class="bookPickRow">
+            <label>
+              <input type="checkbox" class="bookCandidateCheckbox" data-id="${p.id}" ${isChecked ? 'checked' : ''} />
+              <span>${plain(p.title || 'Başlıksız')}</span>
+            </label>
+          </div>
+        `;
+      }).join('');
+
+      $('#selectedCandidatesBadge').textContent = `${tempCandidateIds.size} Aday Seçili`;
+    }
+
+    // Kitap Adayları Butonuna Basınca
+    $('#bookViewBtn')?.addEventListener('click', () => {
+      document.body.classList.add('modal-open');
+      $('#bookSelectorPanel').hidden = true;
+      renderBookListModal();
       $('#bookDialog')?.showModal();
+    });
+
+    // Şiir Ekle / Çıkar Panelini Aç/Kapat
+    $('#toggleBookSelectorBtn')?.addEventListener('click', () => {
+      const panel = $('#bookSelectorPanel');
+      panel.hidden = !panel.hidden;
+      if (!panel.hidden) {
+        // Mevcut adayları kümeye topla
+        tempCandidateIds = new Set(
+          state.poems
+            .filter(p => !p.trashedAt && (p.isBookCandidate || p.status === 'book'))
+            .map(p => p.id)
+        );
+        $('#bookSearchInput').value = '';
+        renderCandidateChecklist();
+      }
+    });
+
+    // Arama Girişi
+    $('#bookSearchInput')?.addEventListener('input', (e) => {
+      renderCandidateChecklist(e.target.value.trim());
+    });
+
+    // Seçim Kutusuna Tıklama (Delegation)
+    $('#bookCandidateCheckList')?.addEventListener('change', (e) => {
+      if (e.target.classList.contains('bookCandidateCheckbox')) {
+        const id = e.target.dataset.id;
+        if (e.target.checked) tempCandidateIds.add(id);
+        else tempCandidateIds.delete(id);
+        $('#selectedCandidatesBadge').textContent = `${tempCandidateIds.size} Aday Seçili`;
+      }
+    });
+
+    // Vazgeç Butonu
+    $('#cancelBookSelectionBtn')?.addEventListener('click', () => {
+      $('#bookSelectorPanel').hidden = true;
+    });
+
+    // Adayları Kaydet Butonu
+    $('#saveBookSelectionBtn')?.addEventListener('click', async () => {
+      const changed = [];
+      state.poems.forEach(p => {
+        const shouldBeCandidate = tempCandidateIds.has(p.id);
+        if (Boolean(p.isBookCandidate) !== shouldBeCandidate) {
+          p.isBookCandidate = shouldBeCandidate;
+          p.updatedAt = new Date().toISOString();
+          changed.push(p);
+        }
+      });
+
+      if (changed.length > 0) {
+        if (typeof window.saveMany === 'function') await window.saveMany(changed);
+        else {
+          for (const p of changed) await savePoemToDB(p);
+        }
+      }
+
+      $('#bookSelectorPanel').hidden = true;
+      renderBookListModal();
+      refresh();
     });
 
 
@@ -838,16 +980,56 @@
 
       const sortedTags = Array.from(allTags).sort((a, b) => a.localeCompare(b, 'tr'));
 
+      // Editördeki mevcut durumu ve favori bilgisini al
+      const currentStatus = $('#editorStatusSelect')?.value || 'ready';
+      const currentPoem = currentEditingId ? state.poems.find(p => p.id === currentEditingId) : null;
+      const isFavorite = currentPoem ? currentPoem.favorite : false;
+
       if (listEl) {
-        listEl.innerHTML = sortedTags.map(tag => {
+        let html = sortedTags.map(tag => {
           const isChecked = currentEditorTags.includes(tag);
           return `
             <label class="tagSelectionItem">
-              <input type="checkbox" value="${plain(tag)}" ${isChecked ? 'checked' : ''} />
+              <!-- Sadece etiketleri ayırmak için tagCheck sınıfı eklendi -->
+              <input type="checkbox" class="tagCheck" value="${plain(tag)}" ${isChecked ? 'checked' : ''} />
               <span>${plain(tag)}</span>
             </label>
           `;
         }).join('');
+
+        // Etiketlerin hemen altına ayrım çizgisi ve ikonlu durum/favori göstergeçleri eklendi
+        html += `
+          <div style="margin: 16px 0 8px 0; border-top: 1px solid var(--border-color);"></div>
+          
+          <label class="tagSelectionItem" style="opacity: 0.9;">
+            <input type="radio" name="popStatus" value="ready" ${currentStatus === 'ready' ? 'checked' : ''} />
+            <span style="display:flex; align-items:center; gap:8px;">
+              <svg class="uiIcon"><use href="#icon-ready"></use></svg> Yayına Hazır
+            </span>
+          </label>
+          
+          <label class="tagSelectionItem" style="opacity: 0.9;">
+            <input type="radio" name="popStatus" value="draft" ${currentStatus === 'draft' ? 'checked' : ''} />
+            <span style="display:flex; align-items:center; gap:8px;">
+              <svg class="uiIcon"><use href="#icon-taslak"></use></svg> Taslak
+            </span>
+          </label>
+          
+          <label class="tagSelectionItem" style="opacity: 0.9;">
+            <input type="radio" name="popStatus" value="archive" ${currentStatus === 'archive' ? 'checked' : ''} />
+            <span style="display:flex; align-items:center; gap:8px;">
+              <svg class="uiIcon"><use href="#icon-archive"></use></svg> Arşiv
+            </span>
+          </label>
+          
+          <label class="tagSelectionItem" style="opacity: 0.9;">
+            <input type="checkbox" id="popFavoriteCheck" ${isFavorite ? 'checked' : ''} />
+            <span style="display:flex; align-items:center; gap:8px; color: var(--accent-color);">
+              <svg class="uiIcon"><use href="#icon-fav"></use></svg> Seçmeler (Favori)
+            </span>
+          </label>
+        `;
+        listEl.innerHTML = html;
       }
 
       document.body.classList.add('modal-open');
@@ -858,11 +1040,29 @@
     $('#closeTagSelectionBtn')?.addEventListener('click', () => $('#tagSelectionDialog')?.close());
 
     $('#saveSelectedTagsBtn')?.addEventListener('click', () => {
-      const checkedBoxes = $$('#tagSelectionList input[type="checkbox"]:checked');
+      // 1. Yalnızca "tagCheck" sınıfına sahip etiket onay kutularını topla
+      const checkedBoxes = $$('#tagSelectionList .tagCheck:checked');
       currentEditorTags = checkedBoxes.map(cb => cb.value);
       updateEditorTagsDisplay();
+      
+      // 2. Durum (Status) seçimini editörün sağ üstündeki görsel menüye yansıt
+      const selectedRadio = $('#tagSelectionList input[name="popStatus"]:checked');
+      if (selectedRadio && typeof setEditorStatus === 'function') {
+        setEditorStatus(selectedRadio.value);
+      }
+      
+      // 3. Favori seçimini doğrudan şiirin kalbine (objeye) yansıt
+      const favCheck = $('#popFavoriteCheck');
+      if (favCheck && currentEditingId) {
+        const poem = state.poems.find(p => p.id === currentEditingId);
+        if (poem) poem.favorite = favCheck.checked;
+      }
+
       $('#tagSelectionDialog')?.close();
     });
+
+
+
 
     $('#addNewTagBtn')?.addEventListener('click', () => {
       let newVal = $('#newTagCreateInput')?.value.trim();
@@ -882,7 +1082,7 @@
       const shareText = `${title}\n\n${content}\n\n— Munnesir`;
       if (navigator.clipboard) {
         navigator.clipboard.writeText(shareText).then(() => {
-          alert('Şiir metni kopyalandı!');
+          alert('Metin kopyalandı!');
         });
       }
     });
@@ -934,6 +1134,367 @@
         statusDropdown?.classList.remove('open');
       }
     });
+
+
+
+
+    // ANDROID VE WEB UYUMLU DİNAMİK KİTAP YÖNETİMİ
+    function getAllAvailableBooks() {
+      const bookSet = new Set();
+      const localBooks = JSON.parse(localStorage.getItem('munnesir-books') || '[]');
+      localBooks.forEach(b => { if (b.title) bookSet.add(b.title.trim()); });
+
+      // Şiirlerin üstündeki Android etiketlerini ve kitap dizilerini topla
+      state.poems.forEach(p => {
+        if (!p.trashedAt && p.status !== 'trash') {
+          if (Array.isArray(p.books)) p.books.forEach(b => bookSet.add(b.trim()));
+          if (p.bookTitle) bookSet.add(p.bookTitle.trim());
+          if (p.isBookCandidate || p.status === 'book') bookSet.add('Bir Sevdanın Kanadından');
+        }
+      });
+
+      if (!bookSet.size) bookSet.add('Bir Sevdanın Kanadından');
+      return Array.from(bookSet);
+    }
+
+    let activeAssignPoemId = null;
+
+    // ŞİİRİ KİTABA ATA MODALINI AÇ
+    window.openBookAssigner = function(poemId) {
+      if (!poemId) return;
+      activeAssignPoemId = poemId;
+      const poem = state.poems.find(p => String(p.id) === String(poemId));
+      const poemBooks = Array.isArray(poem?.books) ? poem.books : (poem?.isBookCandidate ? ['Bir Sevdanın Kanadından'] : []);
+      const allBooks = getAllAvailableBooks();
+      const listEl = $('#bookAssignList');
+
+      if (listEl) {
+        listEl.innerHTML = allBooks.map(bTitle => {
+          const isChecked = poemBooks.includes(bTitle);
+          return `
+            <label class="tagSelectionItem">
+              <input type="checkbox" class="bookAssignCheck" value="${plain(bTitle)}" ${isChecked ? 'checked' : ''} />
+              <span>${plain(bTitle)}</span>
+            </label>
+          `;
+        }).join('');
+      }
+
+      document.body.classList.add('modal-open');
+      $('#bookAssignDialog')?.showModal();
+    };
+
+    $('#readerBookBtn')?.addEventListener('click', () => {
+      if (currentReadingId) window.openBookAssigner(currentReadingId);
+    });
+
+    $('#editorAddBookBtn')?.addEventListener('click', () => {
+      if (!currentEditingId) {
+        alert('Lütfen önce şiiri bir kez kaydedin.');
+        return;
+      }
+      window.openBookAssigner(currentEditingId);
+    });
+
+    $('#closeBookAssignBtn')?.addEventListener('click', () => $('#bookAssignDialog')?.close());
+
+    // YENİ KİTAP EKLEME (POP-UP İÇİNDEN)
+    $('#createBookBtn')?.addEventListener('click', () => {
+      const val = $('#newBookTitleInput')?.value.trim();
+      if (!val) return;
+      const localBooks = JSON.parse(localStorage.getItem('munnesir-books') || '[]');
+      if (!localBooks.some(b => b.title === val)) {
+        localBooks.push({ id: `book-${Date.now()}`, title: val });
+        localStorage.setItem('munnesir-books', JSON.stringify(localBooks));
+      }
+      $('#newBookTitleInput').value = '';
+      window.openBookAssigner(activeAssignPoemId);
+    });
+
+    // ATAMALARI BULUT VE ANDROID UYUMLU KAYDET
+    $('#saveBookAssignBtn')?.addEventListener('click', async () => {
+      const poem = state.poems.find(p => String(p.id) === String(activeAssignPoemId));
+      if (!poem) return;
+
+      const checked = $$('#bookAssignList .bookAssignCheck:checked').map(cb => cb.value);
+      poem.books = checked;
+      poem.isBookCandidate = checked.length > 0;
+      poem.updatedAt = new Date().toISOString();
+
+      await savePoemToDB(poem);
+      $('#bookAssignDialog')?.close();
+      refresh();
+      alert('✓ Şiirin kitap atamaları güncellendi.');
+    });
+
+    // KİTAP PROJELERİ PENCERESİNİ DOLDURMA
+    function renderBookModalView() {
+      const allBooks = getAllAvailableBooks();
+      const selectEl = $('#activeBookFilterSelect');
+      const container = $('#bookListContainer');
+
+      if (!allBooks.length) {
+        if (selectEl) selectEl.innerHTML = '<option>Kitap Yok</option>';
+        if (container) {
+          container.className = 'modalBody bookModalBody';
+          container.innerHTML = '<p style="text-align:center; opacity:0.7;">Henüz bir kitap adayı bulunmuyor.</p>';
+        }
+        return;
+      }
+
+      if (selectEl) {
+        const currentVal = selectEl.value;
+        selectEl.innerHTML = allBooks.map(b => {
+          const count = state.poems.filter(p => !p.trashedAt && (
+            (Array.isArray(p.books) && p.books.includes(b)) ||
+            (b === 'Bir Sevdanın Kanadından' && p.isBookCandidate)
+          )).length;
+          return `<option value="${plain(b)}">${plain(b)} (${count} şiir)</option>`;
+        }).join('');
+
+        if (allBooks.includes(currentVal)) selectEl.value = currentVal;
+      }
+
+      displayPoemsOfBook(selectEl ? selectEl.value : allBooks[0]);
+
+      if ($('#bookPoemSearchInput')) $('#bookPoemSearchInput').value = '';
+      if ($('#bookPoemAssignChecklist')) $('#bookPoemAssignChecklist').style.display = 'none';
+
+    }
+
+    function displayPoemsOfBook(bookTitle) {
+      const container = $('#bookListContainer');
+      if (!container || !bookTitle) return;
+
+      const poems = state.poems.filter(p => !p.trashedAt && (
+        (Array.isArray(p.books) && p.books.includes(bookTitle)) ||
+        (bookTitle === 'Bir Sevdanın Kanadından' && p.isBookCandidate)
+      ));
+
+      if (poems.length) {
+        container.className = 'modalBody bookModalBody poemGrid';
+        container.innerHTML = poems.map(b => `
+          <article class="poemCard" data-id="${b.id}">
+            <div class="cardMainClick" onclick="window.openReader('${b.id}')">
+              <h3>${plain(b.title)}</h3>
+              <p class="${b.fontFamily || 'font-tinos'}">${plain(b.content).slice(0, 140)}...</p>
+            </div>
+            <div class="cardFooterActions">
+              <span style="font-size:0.75rem; opacity:0.6;">${getPoemDate(b)}</span>
+              <div class="cardActionBtns">
+                <button class="stdBtn cardActionBtn" onclick="window.sharePoem('${b.id}', event)">
+                  <svg class="uiIcon"><use href="#icon-share"></use></svg><span>Paylaş</span>
+                </button>
+                <button class="stdBtn cardActionBtn" onclick="window.editPoem('${b.id}', event)">
+                  <svg class="uiIcon"><use href="#icon-pen"></use></svg><span>Düzenle</span>
+                </button>
+              </div>
+            </div>
+          </article>
+        `).join('');
+      } else {
+        container.className = 'modalBody bookModalBody';
+        container.innerHTML = `<p style="text-align:center; opacity:0.7; padding:20px 0;">Bu kitapta henüz şiir yok. Şiir içinden 'Kitaba Ekle' diyerek ekleyebilirsiniz.</p>`;
+      }
+    }
+
+    $('#activeBookFilterSelect')?.addEventListener('change', (e) => {
+      displayPoemsOfBook(e.target.value);
+    });
+
+    // KİTAP PROJELERİ PENCERESİNDEN YENİ KİTAP EKLE
+    $('#addNewBookBtn')?.addEventListener('click', () => {
+      const name = prompt('Yeni kitap projesinin adını girin:');
+      if (name && name.trim()) {
+        const val = name.trim();
+        const localBooks = JSON.parse(localStorage.getItem('munnesir-books') || '[]');
+        if (!localBooks.some(b => b.title === val)) {
+          localBooks.push({ id: `book-${Date.now()}`, title: val });
+          localStorage.setItem('munnesir-books', JSON.stringify(localBooks));
+        }
+        renderBookModalView();
+        const selectEl = $('#activeBookFilterSelect');
+        if (selectEl) {
+          selectEl.value = val;
+          displayPoemsOfBook(val);
+        }
+      }
+    });
+
+
+    // KİTAP ADINI DEĞİŞTİR
+    $('#renameActiveBookBtn')?.addEventListener('click', async () => {
+      const selectEl = $('#activeBookFilterSelect');
+      const oldTitle = selectEl?.value;
+      if (!oldTitle) return;
+
+      const newTitle = prompt(`'${oldTitle}' kitabının yeni adını girin:`, oldTitle);
+      if (!newTitle || newTitle.trim() === '' || newTitle.trim() === oldTitle) return;
+      const cleanNewTitle = newTitle.trim();
+
+      // Yerel listedeki ismi güncelle
+      let localBooks = JSON.parse(localStorage.getItem('munnesir-books') || '[]');
+      const bookObj = localBooks.find(b => b.title === oldTitle);
+      if (bookObj) bookObj.title = cleanNewTitle;
+      else if (oldTitle !== 'Bir Sevdanın Kanadından') localBooks.push({ id: `book-${Date.now()}`, title: cleanNewTitle });
+      localStorage.setItem('munnesir-books', JSON.stringify(localBooks));
+
+      // Tüm şiirlerin içindeki etiketleri bul ve değiştir
+      const changed = [];
+      state.poems.forEach(p => {
+        let wasChanged = false;
+        if (Array.isArray(p.books) && p.books.includes(oldTitle)) {
+          p.books = p.books.filter(b => b !== oldTitle);
+          p.books.push(cleanNewTitle);
+          wasChanged = true;
+        }
+        if (oldTitle === 'Bir Sevdanın Kanadından' && p.isBookCandidate) {
+           p.isBookCandidate = false;
+           if (!Array.isArray(p.books)) p.books = [];
+           p.books.push(cleanNewTitle);
+           wasChanged = true;
+        }
+        if (wasChanged) {
+          p.updatedAt = new Date().toISOString();
+          changed.push(p);
+        }
+      });
+
+      if (changed.length) {
+        if (typeof window.saveMany === 'function') await window.saveMany(changed);
+        else {
+          for (const p of changed) await savePoemToDB(p);
+        }
+      }
+
+      renderBookModalView();
+      if ($('#activeBookFilterSelect')) $('#activeBookFilterSelect').value = cleanNewTitle;
+      displayPoemsOfBook(cleanNewTitle);
+      refresh();
+    });
+
+
+
+
+    // KİTAP PROJELERİ İÇİNDEN CANLI ŞİİR ARAMA VE DOĞRUDAN EKLEME
+    function renderBookPoemSearchList(query = '') {
+      const listEl = $('#bookPoemAssignChecklist');
+      const bookTitle = $('#activeBookFilterSelect')?.value;
+      if (!listEl || !bookTitle) return;
+
+      const q = query.trim().toLowerCase('tr');
+      if (!q) {
+        listEl.style.display = 'none';
+        return;
+      }
+
+      const activePoems = state.poems.filter(p => !p.trashedAt && p.status !== 'trash');
+      const filtered = activePoems.filter(p => (p.title || '').toLowerCase('tr').includes(q) || (p.content || '').toLowerCase('tr').includes(q));
+
+      if (!filtered.length) {
+        listEl.style.display = 'block';
+        listEl.innerHTML = '<div style="padding: 12px; opacity: 0.6; text-align: center;">Bu aramayla eşleşen şiir bulunamadı.</div>';
+        return;
+      }
+
+      listEl.style.display = 'block';
+      listEl.innerHTML = filtered.map(p => {
+        const inBook = (Array.isArray(p.books) && p.books.includes(bookTitle)) || (bookTitle === 'Bir Sevdanın Kanadından' && p.isBookCandidate);
+        return `
+          <label class="tagSelectionItem">
+            <input type="checkbox" class="bookDirectAssignCheck" data-poem-id="${p.id}" ${inBook ? 'checked' : ''} />
+            <span style="font-size: 0.9rem;">${plain(p.title || 'Başlıksız')}</span>
+          </label>
+        `;
+      }).join('');
+    }
+
+    // Arama kutusuna yazı yazıldıkça listeyi filtrele
+    $('#bookPoemSearchInput')?.addEventListener('input', (e) => {
+      renderBookPoemSearchList(e.target.value);
+    });
+
+    // Listeden şiir seçildiğinde (veya çıkarıldığında) anında kitaba kaydet
+    $('#bookPoemAssignChecklist')?.addEventListener('change', async (e) => {
+      if (e.target.classList.contains('bookDirectAssignCheck')) {
+        const poemId = e.target.dataset.poemId;
+        const bookTitle = $('#activeBookFilterSelect')?.value;
+        const isChecked = e.target.checked;
+        if (!poemId || !bookTitle) return;
+
+        const poem = state.poems.find(p => String(p.id) === String(poemId));
+        if (!poem) return;
+
+        if (!Array.isArray(poem.books)) poem.books = [];
+
+        if (isChecked) {
+          if (!poem.books.includes(bookTitle)) poem.books.push(bookTitle);
+          if (bookTitle === 'Bir Sevdanın Kanadından') poem.isBookCandidate = true;
+        } else {
+          poem.books = poem.books.filter(b => b !== bookTitle);
+          if (bookTitle === 'Bir Sevdanın Kanadından') poem.isBookCandidate = false;
+        }
+
+        poem.updatedAt = new Date().toISOString();
+        await savePoemToDB(poem);
+        
+        // Kutucuğu işaretlediğiniz anda aşağıdaki ızgarayı anında yeniler
+        displayPoemsOfBook(bookTitle);
+        refresh();
+      }
+    });
+
+
+
+    // SEÇİLİ KİTABI SİL (ŞİİRLER SİLİNMEZ, SADECE KİTAPTAN ÇIKARILIR)
+    $('#deleteActiveBookBtn')?.addEventListener('click', async () => {
+      const selectEl = $('#activeBookFilterSelect');
+      const bookTitle = selectEl?.value;
+      if (!bookTitle) return;
+
+      if (!confirm(`'${bookTitle}' projesini silmek istediğinize emin misiniz?\n(Şiirleriniz silinmez, yalnızca bu kitaptan ayrılır.)`)) return;
+
+      // Yerel listeden temizle
+      let localBooks = JSON.parse(localStorage.getItem('munnesir-books') || '[]');
+      localBooks = localBooks.filter(b => b.title !== bookTitle);
+      localStorage.setItem('munnesir-books', JSON.stringify(localBooks));
+
+      // Şiir nesnelerinin içinden bu kitabı temizle
+      const changed = [];
+      state.poems.forEach(p => {
+        let wasChanged = false;
+        if (Array.isArray(p.books) && p.books.includes(bookTitle)) {
+          p.books = p.books.filter(b => b !== bookTitle);
+          wasChanged = true;
+        }
+        if (bookTitle === 'Bir Sevdanın Kanadından' && p.isBookCandidate) {
+          p.isBookCandidate = false;
+          wasChanged = true;
+        }
+        if (wasChanged) {
+          p.updatedAt = new Date().toISOString();
+          changed.push(p);
+        }
+      });
+
+      if (changed.length) {
+        if (typeof window.saveMany === 'function') await window.saveMany(changed);
+        else {
+          for (const p of changed) await savePoemToDB(p);
+        }
+      }
+
+      renderBookModalView();
+      refresh();
+    });
+
+    $('#bookViewBtn')?.addEventListener('click', () => {
+      document.body.classList.add('modal-open');
+      renderBookModalView();
+      $('#bookDialog')?.showModal();
+    });
+
+
 
   }//****** initEvents sonu ******
 
@@ -1021,6 +1582,7 @@
   // GLOBAL DÜZENLEME VE PAYLAŞMA KÖPRÜLERİ
 
   // OKUMA PENCERESİ AÇICI
+  // OKUMA PENCERESİ AÇICI
   window.openReader = function(id, isTrash = false) {
     const poem = state.poems.find(p => String(p.id) === String(id));
     if (!poem) return;
@@ -1030,11 +1592,35 @@
     
     const metaEl = $('#readerMeta');
     if (metaEl) {
+      // 1. Tarih Mantığı
       const hasBeenEdited = poem.updatedAt && poem.createdAt && (poem.updatedAt !== poem.createdAt) && (typeof isBulkImportDate === 'function' ? !isBulkImportDate(poem.updatedAt) : true);
+      
+      // 2. Etiket Mantığı
+      let tagsText = "Yok";
+      if (Array.isArray(poem.tags)) {
+        const validTags = poem.tags.filter(t => t && t !== '(boş)');
+        if (validTags.length > 0) tagsText = validTags.map(t => `#${plain(t)}`).join(', ');
+      }
+
+      // 3. Durum ve Seçme (Favori) Mantığı
+      const statusMap = { 'ready': 'Yayına Hazır', 'draft': 'Taslak', 'archive': 'Arşiv', 'trash': 'Çöp Kutusu', 'deleted': 'Silinmiş' };
+      let statusText = statusMap[poem.status] || 'Yayına Hazır';
+      if (poem.favorite) statusText += ' (Seçmeler)';
+
+      // 4. Kitap Mantığı
+      let booksList = [];
+      if (Array.isArray(poem.books)) booksList.push(...poem.books);
+      if (poem.isBookCandidate && !booksList.includes('Bir Sevdanın Kanadından')) booksList.push('Bir Sevdanın Kanadından');
+      let booksText = booksList.length > 0 ? booksList.map(b => plain(b)).join(', ') : 'Yok';
+
+      // Künyeyi Ekrana Basma
       metaEl.innerHTML = `
-        <div style="display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem; opacity: 0.75; margin-bottom: 12px;">
+        <div style="display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem; opacity: 0.75; margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--border-color);">
           <span><strong>İlk Düzenlenen Tarih:</strong> ${formatDetailedDate(poem.createdAt || poem.updatedAt)}</span>
           <span><strong>Son Düzenleme:</strong> ${hasBeenEdited ? formatDetailedDate(poem.updatedAt) : 'Düzenlenmedi'}</span>
+          <span><strong>Etiketler:</strong> ${tagsText}</span>
+          <span><strong>Durum:</strong> ${statusText}</span>
+          <span><strong>Bulunduğu Kitap:</strong> ${booksText}</span>
         </div>
       `;
     }

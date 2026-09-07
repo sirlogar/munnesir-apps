@@ -46,6 +46,12 @@
       <path d="M20.4 18.9c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z"/>
     </symbol>
 
+    <!-- Kitaba Ekle Sembolü -->
+    <symbol id="icon-addbook" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/>
+      <path d="M9 10h6"/>
+    </symbol>
+
     <!-- Çöp Kutusu Sembolü -->
     <symbol id="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
@@ -129,6 +135,12 @@
       <path d="M7 3v4a1 1 0 0 0 1 1h7"/>
     </symbol>
 
+    <!-- Kopyala Sembolü -->
+    <symbol id="icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+      <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+    </symbol>
+
     <!-- Senkron / Yükleniyor Sembolü -->
     <symbol id="icon-sync" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 2v4"/><path d="m16.2 7.8 2.9-2.9"/>
@@ -166,7 +178,7 @@
   <header class="topBanner">
     <div class="bannerLeft">
       <button id="sidebarToggle" class="iconBtn" type="button" aria-label="Menü">☰</button>
-      <div class="brandTop">
+      <div class="brandTop" id="homeLogoBtn" title="Ana Sayfaya Dön">
         <img src="icons/m-cir.png" alt="Munnesir Logo" class="brandLogo">
         <div class="brandTextGroup">
           <h1 class="brandTitle">MUNNESİR</h1>
@@ -326,21 +338,25 @@
     </div>
 
     <!-- ALT ARAÇ ÇUBUĞU -->
-    <div class="editorFooterBar" style="flex-direction: column; align-items: stretch; gap: 12px; height: auto;">
+    <div class="editorFooterBar">
       <!-- SEÇİLİ ETİKETLER GÖSTERİM ALANI -->
-      <div id="editorTagsDisplay" style="display: flex; gap: 6px; flex-wrap: wrap; min-height: 24px;"></div>
+      <div id="editorTagsDisplay" style="display: flex; gap: 6px; flex-wrap: wrap; min-height: 20px;"></div>
       
-      <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="editorFooterRow">
         <div class="footerLeft">
           <button id="editorAddTagBtn" class="stdBtn" type="button">
             <svg class="uiIcon"><use href="#icon-tag"></use></svg>
             <span>Etiketleri Yönet</span>
           </button>
+          <button id="editorAddBookBtn" class="stdBtn" type="button">
+            <svg class="uiIcon"><use href="#icon-addbook"></use></svg>
+            <span>Kitaba Ekle</span>
+          </button>
         </div>
         <div class="footerRight">
           <button id="editorShareBtn" class="stdBtn" type="button">
             <svg class="uiIcon"><use href="#icon-share"></use></svg>
-            <span>Etiketleri Yönet</span>
+            <span>Metni Kopyala</span>
           </button>
         </div>
       </div>
@@ -464,23 +480,76 @@
     </div>
   </dialog>
 
-  <!-- KİTAP ADAYLARI POP-UP -->
-  <dialog id="bookDialog" class="modalDialog" wideModal>
-    <div class="modalContainer">
 
-      <div class="modalHeader">
-        <h2 style="display: flex; align-items: center; gap: 8px;">
-          <svg class="uiIcon" style="width: 24px !important; height: 24px !important;"><use href="#icon-books"></use></svg>
+
+  <!-- KİTAP PROJELERİ POP-UP (YENİLENMİŞ VE ARAMA MOTORLU) -->
+  <dialog id="bookDialog" class="modalDialog" wideModal>
+    <div class="modalContainer bookModalContainer">
+      
+      <div class="modalHeader" style="justify-content: space-between;">
+        <h2 style="display: flex; align-items: center; gap: 8px; margin: 0;">
+          <svg class="uiIcon"><use href="#icon-books"></use></svg>
           Kitap Adayları
         </h2>
         <button id="closeBookBtn" class="iconBtn" type="button">✕</button>
       </div>
 
-      <div class="modalBody" id="bookListContainer">
-        <p>Henüz kitap adayı eklenmemiş.</p>
+      <!-- KİTAP SEÇİM VE YÖNETİM KONTROL BARI -->
+      <div class="bookControlBar">
+        <select id="activeBookFilterSelect" class="textInput bookSelectInput"></select>
+        <div class="bookControlActions">
+          <button id="addNewBookBtn" class="stdBtn primary" type="button">+ Yeni</button>
+          <button id="renameActiveBookBtn" class="stdBtn" type="button">
+            <svg class="uiIcon"><use href="#icon-pen"></use></svg><span>Yeniden Adlandır</span>
+          </button>
+          <button id="deleteActiveBookBtn" class="stdBtn btn-danger" type="button">
+            <svg class="uiIcon"><use href="#icon-trash"></use></svg><span>Sil</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- YENİ: SEÇİLİ KİTABA DOĞRUDAN ŞİİR EKLEME ARAMA PANELİ -->
+      <div class="bookAssignFromBookPanel">
+        <input type="text" id="bookPoemSearchInput" class="textInput" placeholder="Bu kitaba eklemek için arşivden şiir ara..." />
+        <div id="bookPoemAssignChecklist" class="keepTagList" style="max-height: 180px; display: none; margin-top: 10px; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-color);"></div>
+      </div>
+
+      <!-- ŞİİRLERİN LİSTELENDİĞİ ALAN -->
+      <div class="modalBody bookModalBody" id="bookListContainer">
+        <p>Yükleniyor...</p>
+      </div>
+      
+    </div>
+  </dialog>
+
+  <!-- ŞİİRİ KİTABA ATAMA MODALI (KİTAP SEÇ) -->
+  <dialog id="bookAssignDialog" class="modalDialog">
+    <div class="modalContainer bookAssignContainer">
+      <div class="modalHeader" style="justify-content: space-between;">
+        <h2 style="display: flex; align-items: center; gap: 8px; margin: 0;">
+          <svg class="uiIcon"><use href="#icon-books"></use></svg>
+          Kitap Seç
+        </h2>
+        <button id="closeBookAssignBtn" class="iconBtn" type="button">✕</button>
+      </div>
+      
+      <div class="modalBody" style="padding: 16px 24px;">
+        <div id="bookAssignList" class="keepTagList" style="max-height: 220px; overflow-y: auto; padding: 0;"></div>
+        
+        <!-- YENİ KİTAP EKLEME ALANI (TAM HİZALI) -->
+        <div class="keepTagCreator" style="margin-top: 16px; padding: 12px 16px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid var(--border-color); display: flex; gap: 8px; align-items: center;">
+          <input type="text" id="newBookTitleInput" class="textInput" placeholder="Yeni kitap adı..." style="flex: 1; margin: 0;" />
+          <button id="createBookBtn" class="stdBtn primary" type="button" style="width: 42px; height: 40px; padding: 0; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">+</button>
+        </div>
+      </div>
+      
+      <div class="modalBody" style="padding: 0 24px 24px 24px;">
+        <button id="saveBookAssignBtn" class="stdBtn full primary" type="button">Kaydet</button>
       </div>
     </div>
   </dialog>
+
+
 
   <!-- ÇÖP KUTUSU POP-UP -->
   <dialog id="trashDialog" class="modalDialog" wideModal>
@@ -505,14 +574,18 @@
         <h2 id="readerTitle"></h2>
         <button id="closeReaderBtn" class="iconBtn" type="button">✕</button>
       </div>
-      <div id="readerMeta" class="cardMeta"></div>
+
+      <!-- ŞİİRİN KENDİSİ -->
       <pre id="readerContent" class="readerContent font-times"></pre>
       
+      <!-- KÜNYE (TARİH, ETİKET, DURUM, KİTAP) -->
+      <div id="readerMeta" class="cardMeta"></div>
+
       <!-- EN ALTA KAYDIRILDIĞINDA GÖRÜNEN AKSİYON PANELİ -->
       <div class="cardFooterActions" style="margin-top: 20px; padding-top: 14px; justify-content: flex-end;">
         
         <!-- NORMAL MOD BUTONLARI -->
-        <div id="readerStandardActions" class="cardActionBtns">
+        <div id="readerStandardActions" class="cardActionBtns" style="width: 100%;">
           <button id="readerShareBtn" class="stdBtn cardActionBtn" type="button">
             <svg class="uiIcon"><use href="#icon-share"></use></svg>
             <span>Paylaş</span>
@@ -521,7 +594,11 @@
             <svg class="uiIcon"><use href="#icon-pen"></use></svg>
             <span>Düzenle</span>
           </button>
-          <button id="readerSoftDeleteBtn" class="stdBtn cardActionBtn btn-danger" type="button">
+          <button id="readerBookBtn" class="stdBtn cardActionBtn" type="button">
+            <svg class="uiIcon"><use href="#icon-books"></use></svg>
+            <span>Kitaba Ekle</span>
+          </button>
+          <button id="readerSoftDeleteBtn" class="stdBtn cardActionBtn btn-danger" type="button" style="margin-left: auto;">
             <svg class="uiIcon"><use href="#icon-trash"></use></svg>
             <span>Sil</span>
           </button>
