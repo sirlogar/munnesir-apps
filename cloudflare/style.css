@@ -1887,6 +1887,23 @@ body:has(.sidebar.open) .scrollNavContainer {
   }
 
 
+  /* OKUMA MODU ÇÖP KUTUSU (MOBİL: ÜST ÜSTE DÜZEN) */
+  #readerTrashActions {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+
+  #readerTrashActions .stdBtn {
+    width: 100% !important;
+    height: 40px !important;
+    justify-content: center !important;
+    font-size: 0.85rem !important;
+    margin: 0 !important;
+  }
+
+
 }
 /* MOBİL DÜZENLEMELERİN SONU */
 
@@ -1966,11 +1983,57 @@ body:has(.sidebar.open) .scrollNavContainer {
 
 
   /* ONAY POP-UP KUTUSU KOMPAKT BOYUTU */
-dialog#confirmDialog {
-  max-width: 380px !important;
-  width: 88vw !important;
-}
+  dialog#confirmDialog {
+    max-width: 380px !important;
+    width: 88vw !important;
+  }
 
-#confirmDialog .modalContainer {
-  padding: 24px 20px !important;
-}
+  #confirmDialog .modalContainer {
+    padding: 24px 20px !important;
+  }
+
+
+  /* ONAY POP-UP KUTUSUNU TÜM PENCERELERİN EN ÜSTÜNE ÇIKARMA */
+  dialog#confirmDialog[open] {
+    z-index: 10000 !important;
+    max-width: 380px !important;
+    width: 88vw !important;
+  }
+
+  dialog#confirmDialog::backdrop {
+    z-index: 9999 !important;
+  }
+
+  .appToast {
+    z-index: 20000 !important; /* Bildirim her şeyin üstünde parlar */
+  }
+
+
+
+  /* OKUMA PENCERESİ BUTON GİZLEME KİLİDİ */
+  #readerStandardActions[hidden],
+  #readerTrashActions[hidden] {
+    display: none !important;
+  }
+
+  /* ÇÖP KUTUSU MODU (MASAÜSTÜ: SAĞA YANAŞIK, YAN YANA) */
+  #readerTrashActions {
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    gap: 10px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  #readerTrashActions .stdBtn {
+    min-width: 120px !important;
+    height: 38px !important;
+  }
+
+
+  /* POP-UP AÇIKKEN SİDEBAR ETKİLEŞİMİNİ TAMAMEN KİLİTLEME */
+  body:has(dialog[open]) .sidebar,
+  body.modal-open .sidebar {
+    pointer-events: none !important;
+  }

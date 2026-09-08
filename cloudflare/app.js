@@ -315,6 +315,48 @@
     }
   }
 
+  // ÇÖP KUTUSU
+  function renderTrashList() {
+    const deletedSyncIds = new Set(JSON.parse(localStorage.getItem('munnesir-sync-deleted-ids') || '[]').map(x => String(x.id || x)));
+    
+    // Kalıcı silinenleri ve 'deleted' durumundakileri çöpten kesin olarak ayıkla
+    const trashed = state.poems.filter(p => 
+      !deletedSyncIds.has(String(p.id)) && 
+      p.status !== 'deleted' && 
+      (p.trashedAt || p.status === 'trash')
+    );
+    
+    const container = $('#trashListContainer');
+    if (!container) return;
+
+    if (trashed.length) {
+      container.className = "poemGrid";
+      container.innerHTML = trashed.map(t => `
+        <article class="poemCard" data-id="${t.id}">
+          <div class="cardMainClick" onclick="window.openReader('${t.id}', true)">
+            <h3>${plain(t.title)}</h3>
+            <p class="${t.fontFamily || 'font-tinos'}">${plain(t.content).slice(0, 140)}...</p>
+          </div>
+          <div class="cardFooterActions">
+            <span style="font-size:0.75rem; opacity:0.6;">${getPoemDate(t)}</span>
+            <div class="cardActionBtns">
+              <button class="stdBtn cardActionBtn" onclick="window.restorePoem('${t.id}', event)">
+                <svg class="uiIcon"><use href="#icon-restore"></use></svg><span>Geri Yükle</span>
+              </button>
+              <button class="stdBtn cardActionBtn btn-danger" onclick="window.hardDeletePoem('${t.id}', event)">
+                <svg class="uiIcon"><use href="#icon-trash"></use></svg><span>Kalıcı Sil</span>
+              </button>
+            </div>
+          </div>
+        </article>
+      `).join('');
+    } else {
+      container.className = "modalBody";
+      container.innerHTML = '<p style="text-align: center; opacity: 0.7; padding: 20px 0;">Çöp kutusu boş.</p>';
+    }
+  }
+
+
   function renderFeed() {
     const grid = $('#poemGrid');
     const emptyState = $('#emptyState');
@@ -536,23 +578,24 @@
 
       if (!sidebar?.classList.contains('open')) return;
 
+      // 1. POP-UP KORUMASI: Ekranda herhangi bir pop-up (Kitap, Çöp Kutusu vb.) açıkken sidebar KAPANMAZ
+      const isAnyModalOpen = document.querySelector('dialog[open]');
+      if (isAnyModalOpen || e.target.closest('dialog')) return;
+
       const isMobile = window.innerWidth <= 768;
 
       if (isMobile) {
-        // Mobilde sidebar ve hamburger butonu harici HER YER salt boşluktur
+        // Mobilde pop-up yokken: sidebar ve menü butonu harici her yer salt boşluktur
         if (!sidebar.contains(e.target) && !toggleBtn?.contains(e.target)) {
           e.preventDefault();
           e.stopPropagation();
-          e.stopImmediatePropagation(); // Tıklamanın arkadaki karta veya butona ulaşmasını havada keser
+          e.stopImmediatePropagation();
           sidebar.classList.remove('open');
         }
         return;
       }
 
-      // DESKTOP KORUMALARI:
-      const isAnyModalOpen = document.querySelector('dialog[open]');
-      if (isAnyModalOpen || e.target.closest('dialog')) return;
-
+      // 2. DESKTOP KORUMALARI:
       const isProtected = sidebar.contains(e.target) || 
                           toggleBtn?.contains(e.target) || 
                           e.target.closest('.brandTop') || 
@@ -561,11 +604,11 @@
                           e.target.closest('.bannerRight');
       if (isProtected) return;
 
-      // Masaüstünde kartın neresine basılırsa basılsın kart açılır, menü kapanmaz
+      // Masaüstünde karta basıldığında kart açılır, menü kapanmaz
       if (e.target.closest('.poemCard')) return;
 
       sidebar.classList.remove('open');
-    }, true); // "true" (Capture): Tıklamayı kart fonksiyonları çalışmadan önce yakalar
+    }, true);
 
 
 
@@ -850,40 +893,13 @@
     });
 
 
-
-    // ÇÖP KUTUSU
-    $('#trashViewBtn')?.addEventListener('click', async () => {
-      document.body.classList.add('modal-open'); // ARKA PLAN KAYMA KİLİDİ
-      const deletedSyncIds = new Set(JSON.parse(localStorage.getItem('munnesir-sync-deleted-ids') || '[]').map(x => x.id));
-      const trashed = state.poems.filter(p => p.trashedAt || p.status === 'trash' || p.status === 'deleted' || deletedSyncIds.has(p.id));
-      const container = $('#trashListContainer');
-
-      if (trashed.length) {
-        container.className = "poemGrid";
-        container.innerHTML = trashed.map(t => `
-          <article class="poemCard" data-id="${t.id}">
-            <div class="cardMainClick" onclick="window.openReader('${t.id}', true)">
-              <h3>${plain(t.title)}</h3>
-              <p class="${t.fontFamily || 'font-tinos'}">${plain(t.content).slice(0, 140)}...</p>
-            </div>
-            <div class="cardFooterActions">
-              <span style="font-size:0.75rem; opacity:0.6;">${getPoemDate(t)}</span>
-              <div class="cardActionBtns">
-                <button class="stdBtn cardActionBtn" onclick="window.restorePoem('${t.id}', event)">
-                  <svg class="uiIcon"><use href="#icon-restore"></use></svg><span>Geri Yükle</span>
-                </button>
-                <button class="stdBtn cardActionBtn btn-danger" onclick="window.hardDeletePoem('${t.id}', event)">
-                  <svg class="uiIcon"><use href="#icon-trash"></use></svg><span>Kalıcı Sil</span>
-                </button>
-              </div>
-            </div>
-          </article>
-        `).join('');
-      } else {
-        container.className = "modalBody";
-        container.innerHTML = '<p>Çöp kutusu boş.</p>';
+    // ÇÖP KUTUSU BUTON DİNLEYİCİSİ
+    $('#trashViewBtn')?.addEventListener('click', () => {
+      document.body.classList.add('modal-open');
+      renderTrashList();
+      if (!$('#trashDialog')?.open) {
+        $('#trashDialog')?.showModal();
       }
-      $('#trashDialog')?.showModal();
     });
 
     
@@ -1700,11 +1716,19 @@
     await openDB();
     if (!db) return;
 
+    // Silinenler listesindeki şiirleri buluttan gelse bile içeri alma
+    const deletedSyncIds = new Set(
+      JSON.parse(localStorage.getItem('munnesir-sync-deleted-ids') || '[]')
+        .map(x => String(x.id || x))
+    );
+
     return new Promise((resolve) => {
       const tx = db.transaction('poems', 'readwrite');
       const store = tx.objectStore('poems');
       poems.forEach(p => {
-        if (p && p.id) store.put(p);
+        if (p && p.id && !deletedSyncIds.has(String(p.id))) {
+          store.put(p);
+        }
       });
       tx.oncomplete = async () => {
         await refresh();
@@ -1770,7 +1794,6 @@
   // GLOBAL DÜZENLEME VE PAYLAŞMA KÖPRÜLERİ
 
   // OKUMA PENCERESİ AÇICI
-  // OKUMA PENCERESİ AÇICI
   window.openReader = function(id, isTrash = false) {
     const poem = state.poems.find(p => String(p.id) === String(id));
     if (!poem) return;
@@ -1825,11 +1848,11 @@
     const isTrashedPoem = isTrash || poem.trashedAt || poem.status === 'trash' || poem.status === 'deleted';
 
     if (isTrashedPoem) {
-      if (stdActions) stdActions.style.display = 'none';
-      if (trashActions) trashActions.style.display = 'flex';
+      if (stdActions) stdActions.hidden = true;
+      if (trashActions) trashActions.hidden = false;
     } else {
-      if (stdActions) stdActions.style.display = 'flex';
-      if (trashActions) trashActions.style.display = 'none';
+      if (stdActions) stdActions.hidden = false;
+      if (trashActions) trashActions.hidden = true;
     }
 
     document.body.classList.add('modal-open');
@@ -1887,7 +1910,7 @@
     // Eğer çöp kutusu veya okuma penceresi açıksa UI'ı yenile
     $('#readerDialog')?.close();
     const trashBtn = $('#trashViewBtn');
-    if (trashBtn && $('#trashDialog')?.open) trashBtn.click();
+    if (trashBtn && $('#trashDialog')?.open) renderTrashList();
   };
 
   window.moveToTrash = async function(id, e) {
@@ -1914,22 +1937,49 @@
   window.hardDeletePoem = async function(id, e) {
     if (e) e.stopPropagation();
     
-    // Kalıcı silme için net uyarı
     const ok = await showConfirm('Bu şiir kalıcı olarak silinecek. Bu işlem geri alınamaz.', 'Şiiri Sil');
     if (!ok) return;
 
     const poem = state.poems.find(p => String(p.id) === String(id));
     if (!poem) return;
 
+    const poemIdStr = String(poem.id);
+
+    // 1. Bulutun şiiri tekrar geri indirmesini engelleyen kara liste (Tombstone) kaydı
+    try {
+      let deletedSync = JSON.parse(localStorage.getItem('munnesir-sync-deleted-ids') || '[]');
+      if (!deletedSync.some(x => String(x.id || x) === poemIdStr)) {
+        deletedSync.push({ id: poem.id, deletedAt: new Date().toISOString() });
+        localStorage.setItem('munnesir-sync-deleted-ids', JSON.stringify(deletedSync));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+
+    // 2. Şiiri anlık akıştan ve bellekten derhal kazı
+    state.poems = state.poems.filter(p => String(p.id) !== poemIdStr);
+
+    // 3. IndexedDB'den hem sayı hem metin tipinde kalıcı sil
     const tx = db.transaction('poems', 'readwrite');
     const store = tx.objectStore('poems');
-    store.delete(poem.id); 
-    
+    store.delete(poem.id);
+    if (typeof poem.id === 'string' && !isNaN(Number(poem.id))) store.delete(Number(poem.id));
+    if (typeof poem.id === 'number') store.delete(String(poem.id));
+
     tx.oncomplete = async () => {
-      await window.refresh();
       $('#readerDialog')?.close();
-      const trashBtn = $('#trashViewBtn');
-      if (trashBtn && $('#trashDialog')?.open) trashBtn.click();
+      
+      // Çöp kutusu penceresini hata vermeden tazeleyen bağımsız render
+      renderTrashList();
+      updateSidebarCounts();
+      renderFeed();
+
+      // Bulut senkronizasyonu aktifse silme emrini buluta da gönder
+      const syncUploadBtn = $('#syncUploadBtn');
+      if (syncUploadBtn && localStorage.getItem('munnesir-password')) {
+        syncUploadBtn.click();
+      }
+
       showToast('✓ Şiir tamamen silindi.');
     };
   };
