@@ -264,11 +264,22 @@
     });
   }
 
-  // SİDEBAR DURUM VE ÇÖP KUTUSU SAYILARINI GÜNCELLEME (RENDERTAGS DIŞINA ALINDI)
+  // SİDEBAR DURUM VE ÇÖP KUTUSU SAYILARINI GÜNCELLEME
   function updateSidebarCounts() {
     if (!state.poems) return;
 
-    const activePoems = state.poems.filter(p => !p.trashedAt && p.status !== 'trash' && p.status !== 'deleted');
+    // Kara listedeki (kalıcı silinmiş) ID'leri kümele
+    const deletedSyncIds = new Set(
+      JSON.parse(localStorage.getItem('munnesir-sync-deleted-ids') || '[]').map(x => String(x.id || x))
+    );
+
+    // Aktif (silinmemiş ve kara listede olmayan) şiirler
+    const activePoems = state.poems.filter(p => 
+      !p.trashedAt && 
+      p.status !== 'trash' && 
+      p.status !== 'deleted' && 
+      !deletedSyncIds.has(String(p.id))
+    );
 
     const counts = {
       ready: activePoems.filter(p => (p.status === 'ready' || !p.status)).length,
@@ -296,11 +307,14 @@
       setBadge(btn, counts[status] !== undefined ? counts[status] : 0);
     });
 
-    // 2. Çöp Kutusu Sayısı
+    // 2. Çöp Kutusu Sayısı (renderTrashList ile birebir eşitlendi)
     const trashBtn = $('#trashViewBtn');
     if (trashBtn) {
-      const deletedSyncIds = new Set(JSON.parse(localStorage.getItem('munnesir-sync-deleted-ids') || '[]').map(x => x.id));
-      const trashedCount = state.poems.filter(p => p.trashedAt || p.status === 'trash' || p.status === 'deleted' || deletedSyncIds.has(p.id)).length;
+      const trashedCount = state.poems.filter(p => 
+        !deletedSyncIds.has(String(p.id)) && 
+        p.status !== 'deleted' && 
+        (p.trashedAt || p.status === 'trash')
+      ).length;
       setBadge(trashBtn, trashedCount);
     }
 
@@ -310,7 +324,12 @@
       const localBooks = JSON.parse(localStorage.getItem('munnesir-books') || '[]');
       const bookPoemIds = new Set();
       localBooks.forEach(b => (b.poemIds || []).forEach(id => bookPoemIds.add(id)));
-      const bookCount = state.poems.filter(p => !p.trashedAt && (p.isBookCandidate || p.status === 'book' || bookPoemIds.has(p.id))).length;
+      const bookCount = state.poems.filter(p => 
+        !p.trashedAt && 
+        p.status !== 'trash' && 
+        !deletedSyncIds.has(String(p.id)) && 
+        (p.isBookCandidate || p.status === 'book' || bookPoemIds.has(p.id))
+      ).length;
       setBadge(bookBtn, bookCount);
     }
   }
