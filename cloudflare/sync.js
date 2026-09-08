@@ -4,8 +4,8 @@
   const BOOKS_KEY = 'munnesir-books';
   const DELETED_KEY = 'munnesir-sync-deleted-ids';
   const DEFAULT_API_BASE = 'https://munnesir.pages.dev'; // <-- Cloudflare canlı adresin
-  const POLL_MS = 4500;
-  const PUSH_DEBOUNCE_MS = 1200;
+  const POLL_MS = 2000;
+  const PUSH_DEBOUNCE_MS = 200;
 
   let pushTimer = null;
   let pollTimer = null;
@@ -474,14 +474,22 @@
   }
 
   function bootSync() {
-    bindUi();
-    patchLocalMutations();
-    restoreStatus();
-    window.addEventListener('online', () => {
-      startRealtimeLoop();
-      runSafely(() => syncMerge(false), false);
-    });
-  }
+  bindUi();
+  patchLocalMutations();
+  restoreStatus();
+
+  // Ekrana dokunulduğunda veya sekmeye dönüldüğünde sıfır gecikmeyle kontrol et
+  window.addEventListener('focus', () => runSafely(checkRemote, true));
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') runSafely(checkRemote, true);
+  });
+
+  // İnternet geldiğinde çalışacak tetikleyici
+  window.addEventListener('online', () => {
+    startRealtimeLoop();
+    runSafely(() => syncMerge(false), false);
+  });
+}
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootSync);
   else bootSync();
