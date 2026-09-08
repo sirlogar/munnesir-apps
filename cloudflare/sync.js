@@ -21,15 +21,13 @@
 
   function normalizeBase(value) {
     const raw = String(value || '').trim();
-    if (!raw) {
-      // Localhost/Live Server üzerindeysek 405 hatasını engellemek için direkt Cloudflare'a yönlendir
-      if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-        return DEFAULT_API_BASE;
-      }
-      if (location.protocol === 'http:' || location.protocol === 'https:') return location.origin;
-      return DEFAULT_API_BASE;
+    if (raw && !raw.includes('devtunnels.ms') && !raw.includes('localhost') && !raw.includes('127.0.0.1')) {
+      return raw.replace(/\/+$/, '');
     }
-    return raw.replace(/\/+$/, '');
+    if (location.hostname.endsWith('munnesir.pages.dev')) {
+      return location.origin;
+    }
+    return DEFAULT_API_BASE;
   }
 
   function loadConfig() {
@@ -359,7 +357,7 @@
   }
 
   function patchLocalMutations() {
-    const names = ['savePoem', 'saveMany', 'deletePoem', 'deleteMany', 'moveManyToTrash', 'restoreMany', 'importJsonPayloads'];
+    const names = ['savePoem', 'saveMany', 'hardDeletePoem', 'moveToTrash', 'restorePoem', 'importJsonPayloads'];
     names.forEach((name) => {
       if (typeof window[name] !== 'function' || window[name].__munnesirPatched) return;
       const original = window[name];
@@ -479,7 +477,10 @@
     bindUi();
     patchLocalMutations();
     restoreStatus();
-    window.addEventListener('online', () => runSafely(() => syncMerge(true), true));
+    window.addEventListener('online', () => {
+      startRealtimeLoop();
+      runSafely(() => syncMerge(false), false);
+    });
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootSync);
