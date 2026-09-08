@@ -13,6 +13,84 @@
     sortOrder: 'updatedDesc'
   };
 
+  // SİSTEM ALERTLERİNİ TEMATİK BİLDİRİME DÖNÜŞTÜRÜCÜ
+  let toastTimer = null;
+  function showToast(message, duration = 2200) {
+    let toast = $('#appToast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'appToast';
+      toast.className = 'appToast';
+    }
+
+    // Ekranda açık bir kart/pop-up (dialog) varsa bildirimi doğrudan onun içine taşı
+    const openDialog = document.querySelector('dialog[open]');
+    const targetParent = openDialog || document.body;
+
+    if (toast.parentElement !== targetParent) {
+      targetParent.appendChild(toast);
+    }
+
+    toast.textContent = message;
+    toast.classList.add('show');
+
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      toast.classList.remove('show');
+    }, duration);
+  }
+
+  // TEMATİK ONAY POP-UP KÖPRÜSÜ (PROMISE TABANLI)
+  function showConfirm(message, title = 'Emin misiniz?') {
+    return new Promise((resolve) => {
+      const dialog = $('#confirmDialog');
+      const titleEl = $('#confirmTitle');
+      const msgEl = $('#confirmMessage');
+      const yesBtn = $('#confirmYesBtn');
+      const noBtn = $('#confirmNoBtn');
+
+      if (!dialog) return resolve(false);
+
+      if (titleEl) titleEl.textContent = title;
+      if (msgEl) msgEl.textContent = message;
+
+      document.body.classList.add('modal-open');
+      dialog.showModal();
+
+      const handleYes = () => {
+        cleanup();
+        dialog.close();
+        resolve(true);
+      };
+
+      const handleNo = () => {
+        cleanup();
+        dialog.close();
+        resolve(false);
+      };
+
+      const handleClose = () => {
+        cleanup();
+        resolve(false);
+      };
+
+      function cleanup() {
+        yesBtn?.removeEventListener('click', handleYes);
+        noBtn?.removeEventListener('click', handleNo);
+        dialog.removeEventListener('close', handleClose);
+      }
+
+      yesBtn?.addEventListener('click', handleYes);
+      noBtn?.addEventListener('click', handleNo);
+      dialog.addEventListener('close', handleClose, { once: true });
+    });
+  }
+
+  // Tarayıcının varsayılan alert fonksiyonunu yerel bildirimimizle eziyoruz
+  window.alert = showToast;
+  window.showToast = showToast;
+
+
   const $ = (s) => document.querySelector(s);
   const $$ = (s) => [...document.querySelectorAll(s)];
 
@@ -110,8 +188,10 @@
     state.poems = await getAllPoems();
     renderTags();
     renderFeed();
+    updateSidebarCounts();
   }
 
+  // SİDEBAR MEVCUT SAYILARI GÖSTERME
   function renderTags() {
     const container = $('#tagCloud');
     if (!container) return;
@@ -124,7 +204,6 @@
 
     activePoems.forEach(p => {
       if (Array.isArray(p.tags)) {
-        // Şiir içindeki mükerrer etiketleri tekilleştir (1 şiirde 2 kez #deneme varsa 1 sayılsın)
         const seenInPoem = new Set();
         p.tags.forEach(rawTag => {
           if (!rawTag || rawTag === '(boş)') return;
@@ -183,6 +262,57 @@
         renderFeed();
       });
     });
+  }
+
+  // SİDEBAR DURUM VE ÇÖP KUTUSU SAYILARINI GÜNCELLEME (RENDERTAGS DIŞINA ALINDI)
+  function updateSidebarCounts() {
+    if (!state.poems) return;
+
+    const activePoems = state.poems.filter(p => !p.trashedAt && p.status !== 'trash' && p.status !== 'deleted');
+
+    const counts = {
+      ready: activePoems.filter(p => (p.status === 'ready' || !p.status)).length,
+      draft: activePoems.filter(p => p.status === 'draft').length,
+      archive: activePoems.filter(p => p.status === 'archive').length,
+      favorite: activePoems.filter(p => Boolean(p.favorite)).length
+    };
+
+    const setBadge = (el, count) => {
+      if (!el) return;
+      let badge = el.querySelector('.sidebarCountBadge');
+      if (!badge) {
+        badge = document.createElement('small');
+        badge.className = 'sidebarCountBadge';
+        badge.style.cssText = 'opacity: 0.6; margin-left: auto; font-size: 0.82rem; font-weight: normal;';
+        el.appendChild(badge);
+      }
+      badge.textContent = count;
+    };
+
+    // 1. Durum Filtreleri (Tümü hariç)
+    $$('#statusFilters button[data-status]').forEach(btn => {
+      const status = btn.dataset.status;
+      if (status === 'all') return;
+      setBadge(btn, counts[status] !== undefined ? counts[status] : 0);
+    });
+
+    // 2. Çöp Kutusu Sayısı
+    const trashBtn = $('#trashViewBtn');
+    if (trashBtn) {
+      const deletedSyncIds = new Set(JSON.parse(localStorage.getItem('munnesir-sync-deleted-ids') || '[]').map(x => x.id));
+      const trashedCount = state.poems.filter(p => p.trashedAt || p.status === 'trash' || p.status === 'deleted' || deletedSyncIds.has(p.id)).length;
+      setBadge(trashBtn, trashedCount);
+    }
+
+    // 3. Kitap Projeleri Sayısı
+    const bookBtn = $('#bookViewBtn');
+    if (bookBtn) {
+      const localBooks = JSON.parse(localStorage.getItem('munnesir-books') || '[]');
+      const bookPoemIds = new Set();
+      localBooks.forEach(b => (b.poemIds || []).forEach(id => bookPoemIds.add(id)));
+      const bookCount = state.poems.filter(p => !p.trashedAt && (p.isBookCandidate || p.status === 'book' || bookPoemIds.has(p.id))).length;
+      setBadge(bookBtn, bookCount);
+    }
   }
 
   function renderFeed() {
@@ -397,20 +527,70 @@
       $('#sidebar')?.classList.toggle('open');
     });
 
+
+
     // SİDEBAR DIŞINA (BOŞLUĞA) TIKLAYINCA KAPATMA
     document.addEventListener('click', (e) => {
       const sidebar = $('#sidebar');
       const toggleBtn = $('#sidebarToggle');
 
-      if (sidebar?.classList.contains('open')) {
-        const isAnyModalOpen = document.querySelector('dialog[open]');
-        
-        // Tıklanan yer menü, buton veya HERHANGİ BİR POP-UP'IN İÇİ (çarpı butonu dahil) DEĞİLSE kapat
-        if (!sidebar.contains(e.target) && !toggleBtn?.contains(e.target) && !isAnyModalOpen && !e.target.closest('dialog')) {
+      if (!sidebar?.classList.contains('open')) return;
+
+      const isMobile = window.innerWidth <= 768;
+
+      if (isMobile) {
+        // Mobilde sidebar ve hamburger butonu harici HER YER salt boşluktur
+        if (!sidebar.contains(e.target) && !toggleBtn?.contains(e.target)) {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation(); // Tıklamanın arkadaki karta veya butona ulaşmasını havada keser
           sidebar.classList.remove('open');
         }
+        return;
+      }
+
+      // DESKTOP KORUMALARI:
+      const isAnyModalOpen = document.querySelector('dialog[open]');
+      if (isAnyModalOpen || e.target.closest('dialog')) return;
+
+      const isProtected = sidebar.contains(e.target) || 
+                          toggleBtn?.contains(e.target) || 
+                          e.target.closest('.brandTop') || 
+                          e.target.closest('#homeLogoBtn') || 
+                          e.target.closest('#settingsOpenBtn') ||
+                          e.target.closest('.bannerRight');
+      if (isProtected) return;
+
+      // Masaüstünde kartın neresine basılırsa basılsın kart açılır, menü kapanmaz
+      if (e.target.closest('.poemCard')) return;
+
+      sidebar.classList.remove('open');
+    }, true); // "true" (Capture): Tıklamayı kart fonksiyonları çalışmadan önce yakalar
+
+
+
+    // KARTIN BOŞLUKLARI DAHİL HER YERİNDEN ŞİİRİ AÇMA (BUTONLAR HARİÇ)
+    document.addEventListener('click', (e) => {
+      const card = e.target.closest('.poemCard');
+      if (!card) return;
+
+      // Mobilde menü açıkken karta dokunulduysa kart açılmasın (önce menü kapansın)
+      if (window.innerWidth <= 768 && $('#sidebar')?.classList.contains('open')) return;
+
+      // Paylaş veya Düzenle gibi aksiyon butonlarına tıklandıysa okuyucuyu tetikleme
+      if (e.target.closest('.cardActionBtns') || e.target.closest('button')) return;
+
+      // İç metne tıklandıysa mükerrer açılmayı önlemek için inline tıklamayı bekle
+      if (e.target.closest('.cardMainClick')) return;
+
+      // Kartın boşluğuna, kenarına veya tarihine basıldıysa doğrudan şiiri aç
+      const poemId = card.dataset.id;
+      if (poemId) {
+        const isTrash = Boolean(card.closest('#trashDialog'));
+        window.openReader(poemId, isTrash);
       }
     });
+
 
 
     // LOGO VE YAZIYA TIKLAYINCA ANA SAYFAYA DÖNME (RESET)
@@ -437,8 +617,7 @@
       const allBtn = document.querySelector('#statusFilters button[data-status="all"]');
       if (allBtn) allBtn.classList.add('active');
 
-      // 5. Sidebar'ı kapat
-      $('#sidebar')?.classList.remove('open');
+      // 5. Sidebar'ı kapat (silindi)
 
       // 6. En üste kaydır ve akışı yenile
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -476,6 +655,9 @@
     // TEKİL MODAL VE EDİTÖR KÖPRÜLERİ
     $('#newPoemFabBtn')?.addEventListener('click', () => showEditor(null));
     $('#closeEditorBtn')?.addEventListener('click', () => hideEditor());
+
+    // EDİTÖRDE YAZARKEN ANLIK KELİME VE KARAKTER SAYIMI
+    $('#editorContentInput')?.addEventListener('input', updateEditorStats);
 
     $('#settingsOpenBtn')?.addEventListener('click', () => openModal('#settingsDialog'));
     $('#closeSettingsBtn')?.addEventListener('click', () => $('#settingsDialog')?.close());
@@ -1075,13 +1257,16 @@
       }
     });
 
+    // EDİTÖR İÇİ: YALNIZCA METNİ PANOLAMAYA KOPYALAMA
     $('#editorShareBtn')?.addEventListener('click', () => {
-      const title = $('#editorTitleInput').value.trim();
-      const content = $('#editorContentInput').value.trim();
+      const title = $('#editorTitleInput')?.value.trim() || 'Başlıksız Şiir';
+      const content = $('#editorContentInput')?.value.trim() || '';
       if (!content) return;
-      const shareText = `${title}\n\n${content}\n\n— Munnesir`;
+
+      const copyText = `${title}\n\n${content}\n\n— Munnesir`;
+
       if (navigator.clipboard) {
-        navigator.clipboard.writeText(shareText).then(() => {
+        navigator.clipboard.writeText(copyText).then(() => {
           alert('Metin kopyalandı!');
         });
       }
@@ -1452,7 +1637,9 @@
       const bookTitle = selectEl?.value;
       if (!bookTitle) return;
 
-      if (!confirm(`'${bookTitle}' projesini silmek istediğinize emin misiniz?\n(Şiirleriniz silinmez, yalnızca bu kitaptan ayrılır.)`)) return;
+      // ESKİ if (!confirm(...)) SATIRININ YERİNE GELEN TEMATİK KOD:
+      const ok = await showConfirm(`'${bookTitle}' projesini silmek istediğinize emin misiniz?\n(Şiirleriniz silinmez, yalnızca bu kitaptan ayrılır.)`, 'Kitap Projesini Sil');
+      if (!ok) return;
 
       // Yerel listeden temizle
       let localBooks = JSON.parse(localStorage.getItem('munnesir-books') || '[]');
@@ -1486,6 +1673,7 @@
 
       renderBookModalView();
       refresh();
+      showToast(`✓ '${bookTitle}' projesi silindi.`);
     });
 
     $('#bookViewBtn')?.addEventListener('click', () => {
@@ -1653,16 +1841,32 @@
     showEditor(id);
   };
 
-  window.sharePoem = function(id, e) {
+  window.sharePoem = async function(id, e) {
     if (e) e.stopPropagation();
-    const poem = state.poems.find(p => p.id === id);
+    const poem = state.poems.find(p => String(p.id) === String(id));
     if (!poem) return;
 
-    const shareText = `${poem.title}\n\n${poem.content}\n\n— Munnesir`;
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(shareText).then(() => {
-        alert('Şiir metni panoya kopyalandı!');
-      });
+    const shareData = {
+      title: poem.title || 'Munnesir Şiir',
+      text: `${poem.title}\n\n${poem.content}\n\n— Munnesir`
+    };
+
+    // 1. Cihazın yerel paylaşım desteği varsa (WhatsApp, Telegram vb. penceresini açar)
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        // Kullanıcı paylaşım menüsünü açıp vazgeçerse sessizce kalır, hata basmaz
+        if (err.name !== 'AbortError' && navigator.clipboard) {
+          await navigator.clipboard.writeText(shareData.text);
+          alert('Şiir metni panoya kopyalandı!');
+        }
+      }
+    } 
+    // 2. Desteklemeyen masaüstü tarayıcıları için panoya kopyalama yedeği
+    else if (navigator.clipboard) {
+      await navigator.clipboard.writeText(shareData.text);
+      alert('Şiir metni panoya kopyalandı!');
     }
   };
 
@@ -1688,12 +1892,14 @@
 
   window.moveToTrash = async function(id, e) {
     if (e) e.stopPropagation();
-    if (!confirm('Bu şiiri çöp kutusuna taşımak istediğinize emin misiniz?')) return;
+    
+    // Tarayıcı uyarısı yerine tematik pop-up
+    const ok = await showConfirm('Bu şiiri çöp kutusuna taşımak istediğinize emin misiniz?');
+    if (!ok) return;
 
     const poem = state.poems.find(p => String(p.id) === String(id));
     if (!poem) return;
 
-    // Şiiri çöp kutusuna gönderen etiketleri basıyoruz
     poem.trashedAt = new Date().toISOString();
     poem.status = 'trash';
     poem.updatedAt = new Date().toISOString();
@@ -1701,25 +1907,22 @@
     await window.savePoem(poem);
     await window.refresh();
 
-    // İşlem bitince pencereyi kapat
     $('#readerDialog')?.close();
+    showToast('Şiir çöp kutusuna taşındı.');
   };
 
   window.hardDeletePoem = async function(id, e) {
     if (e) e.stopPropagation();
     
-    // 1. "Kalıcı" kelimesi çıkarıldı ve metin sadeleştirildi
-    if (!confirm('Bu şiiri silmek istediğinize emin misiniz?')) return;
+    // Kalıcı silme için net uyarı
+    const ok = await showConfirm('Bu şiir kalıcı olarak silinecek. Bu işlem geri alınamaz.', 'Şiiri Sil');
+    if (!ok) return;
 
-    // 2. Tip Uyuşmazlığı Çözümü (Silinmeme sorununun ana nedeni)
     const poem = state.poems.find(p => String(p.id) === String(id));
     if (!poem) return;
 
-    // Veritabanından kazıma işlemi
     const tx = db.transaction('poems', 'readwrite');
     const store = tx.objectStore('poems');
-    
-    // Ham id yerine, eşleşen orijinal poem.id'yi kullanarak tip uyuşmazlığını aşıyoruz
     store.delete(poem.id); 
     
     tx.oncomplete = async () => {
@@ -1727,6 +1930,7 @@
       $('#readerDialog')?.close();
       const trashBtn = $('#trashViewBtn');
       if (trashBtn && $('#trashDialog')?.open) trashBtn.click();
+      showToast('✓ Şiir tamamen silindi.');
     };
   };
 

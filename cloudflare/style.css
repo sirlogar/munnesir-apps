@@ -1683,3 +1683,294 @@ dialog#bookAssignDialog .bookAssignContainer {
 #homeLogoBtn:hover {
   opacity: 0.8 !important;
 }
+
+
+/* SİDEBAR AÇIKKEN KAYDIRMA OKLARINI (SCROLL) GİZLEME */
+body:has(.sidebar.open) .scrollNavContainer {
+  display: none !important;
+}
+
+
+/* MOBİL DÜZENLEMELERİ */
+@media (max-width: 768px) {
+  /* Üst barı inceltip butonları sıkılaştırma */
+  .editorHeaderBar {
+    padding: 8px 12px !important;
+  }
+  
+  .headerRight {
+    gap: 8px !important;
+  }
+
+  /* Masaüstündeki %10 yan boşluğu kaldırıp ekrana yayma */
+  .editorPaper {
+    padding: 14px 16px !important;
+  }
+
+  /* Başlık ve metin puntolarını telefon ekranına oranlama */
+  .editorTitleInput {
+    font-size: 1.4rem !important;
+    padding-bottom: 8px !important;
+  }
+
+  .editorDivider {
+    margin: 0 0 12px 0 !important;
+  }
+
+  .editorContentArea {
+    font-size: 1.05rem !important;
+    line-height: 1.6 !important;
+    padding-bottom: 100px !important; /* Sanal klavye açıldığında son satırların altta ezilmesini engeller */
+  }
+
+  /* Alt aksiyon çubuğunu kompakt hale getirme */
+  .editorFooterBar {
+    padding: 8px 12px !important;
+    gap: 8px !important;
+  }
+
+  .footerLeft {
+    gap: 6px !important;
+  }
+
+  /* Mobilde butonların taşmasını önleyen kompakt boyut */
+  .editorFooterBar .stdBtn {
+    height: 36px !important;
+    padding: 0 10px !important;
+    font-size: 0.8rem !important;
+    gap: 6px !important;
+  }
+
+  /* Durum açılır menüsünün mobildeki yüksekliği */
+  .editorFooterBar .customDropdown .dropdownTrigger {
+    height: 36px !important;
+    padding: 0 10px !important;
+    font-size: 0.8rem !important;
+  }
+
+  /* =========================================================
+     1. OKUMA MODU: 2x2 DÜZENİ (PAYLAŞ/DÜZENLE & KİTAP/SİL)
+     ========================================================= */
+  #readerDialog .modalContainer {
+    padding: 18px 14px !important;
+    box-sizing: border-box !important;
+  }
+
+  #readerStandardActions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  #readerStandardActions .stdBtn {
+    width: 100% !important;
+    height: 38px !important;
+    padding: 0 8px !important;
+    font-size: 0.82rem !important;
+    margin: 0 !important;
+    justify-content: center !important;
+  }
+
+  /* Sol Sütun: Paylaş, Düzenle'nin üstünde */
+  #readerShareBtn {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+  }
+  #readerEditBtn {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+  }
+
+  /* Sağ Sütun: Kitaba Ekle, Sil'in üstünde */
+  #readerBookBtn {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+  }
+  #readerSoftDeleteBtn {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+  }
+
+  /* =========================================================
+     2. EDİTÖR ÜST BARI: KOMPAKT BUTONLAR VE KAYDET KİLİDİ
+     ========================================================= */
+  .editorHeaderBar {
+    position: relative !important;
+    padding: 8px 10px 24px 10px !important; /* Sayaç payı */
+    box-sizing: border-box !important;
+    width: 100% !important;
+  }
+
+  .headerRight {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+
+  /* İkonları küçülterek butonların şişmesini engelleme */
+  .editorHeaderBar .uiIcon {
+    width: 14px !important;
+    height: 14px !important;
+    min-width: 14px !important;
+    min-height: 14px !important;
+  }
+
+  /* Arşive Dön Butonu */
+  #closeEditorBtn {
+    height: 34px !important;
+    padding: 0 8px !important;
+    font-size: 0.74rem !important;
+    gap: 4px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Durum (Taslak/Yayına Hazır) Açılır Menüsü */
+  .editorHeaderBar .customDropdown {
+    min-width: unset !important;
+    width: auto !important;
+    flex-shrink: 1 !important;
+  }
+
+  .editorHeaderBar .customDropdown .dropdownTrigger {
+    height: 34px !important;
+    padding: 0 8px !important;
+    font-size: 0.74rem !important;
+    gap: 4px !important;
+    white-space: nowrap !important;
+  }
+
+  /* Kaydet Butonu: 'Kaydedildi' yazınca taşmayı önleyen sabit taban */
+  #editorSaveBtn {
+    height: 34px !important;
+    min-width: 86px !important; /* 'Kaydedildi' gelince butonun boyu fırlamaz */
+    padding: 0 8px !important;
+    font-size: 0.74rem !important;
+    gap: 4px !important;
+    white-space: nowrap !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+  }
+
+
+  /* DURUM MENÜSÜNÜ EN GENİŞ BOYUTA (YAYINA HAZIR) KİLİTLEME */
+  .editorHeaderBar .customDropdown {
+    width: 110px !important;
+    min-width: 110px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .editorHeaderBar .customDropdown .dropdownTrigger {
+    width: 100% !important;
+    height: 34px !important;
+    padding: 0 8px !important;
+    font-size: 0.74rem !important;
+    justify-content: space-between !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
+  }
+
+  /* AÇILIR MENÜ LİSTESİ VE SEÇENEK FONTU */
+  .editorHeaderBar .customDropdown .dropdownMenu {
+    width: 100% !important;
+    min-width: 110px !important;
+    padding: 4px !important;
+    box-sizing: border-box !important;
+  }
+
+  .editorHeaderBar .customDropdown .dropdownOption {
+    font-size: 0.74rem !important; /* Üst buton ile birebir aynı punto */
+    padding: 6px 8px !important;
+    white-space: nowrap !important;
+  }
+
+
+}
+/* MOBİL DÜZENLEMELERİN SONU */
+
+
+
+/* SAYACI BUTONLARDAN AYIRIP ALT ORTAYA SABİTLEME */
+  .editorHeaderBar {
+    position: relative !important;
+    padding: 8px 12px 24px 12px !important; /* Alt kısımda sayaç için 24px ferah bir yer açar */
+  }
+
+  .headerRight {
+    position: static !important;
+    gap: 8px !important;
+  }
+
+  #editorStats {
+    position: absolute !important;
+    bottom: 4px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important; /* Ekranın tam yatay ortasına çiviler */
+    font-size: 0.72rem !important;
+    opacity: 0.6 !important;
+    white-space: nowrap !important; /* Kelime ve karakterin alt alta kırılmasını kilitler */
+    pointer-events: none !important;
+  }
+
+
+  /* CHROME MAVİ DOKUNMA LEKESİ VE ODAK KUTUCUĞUNU (OUTLINE) SIFIRLAMA */
+  *, *::before, *::after {
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;
+  }
+
+  *:focus {
+    outline: none !important;
+  }
+
+  *:focus-visible {
+    outline: none !important;
+  }
+
+
+  /* TEMATİK MUNNESIR BİLDİRİM (TOAST) KUTUSU */
+  .appToast {
+    position: fixed;
+    bottom: 36px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border: 1px solid var(--accent-color);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6), 0 0 16px rgba(168, 85, 247, 0.25);
+    padding: 10px 22px;
+    border-radius: 14px;
+    font-size: 0.88rem;
+    font-weight: 500;
+    z-index: 9999; /* Tüm modalların ve pencerelerin en üstünde kalır */
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    max-width: 88vw;
+    white-space: nowrap;
+    backdrop-filter: blur(12px);
+    box-sizing: border-box;
+  }
+
+  .appToast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+  }
+
+
+  /* ONAY POP-UP KUTUSU KOMPAKT BOYUTU */
+dialog#confirmDialog {
+  max-width: 380px !important;
+  width: 88vw !important;
+}
+
+#confirmDialog .modalContainer {
+  padding: 24px 20px !important;
+}
