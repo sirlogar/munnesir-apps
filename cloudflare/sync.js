@@ -245,18 +245,29 @@
     const cloud = asPayload(cloudRaw);
     const deleted = mergeDeleted(local.deleted, cloud.deleted);
     const deletedMap = new Map(deleted.map((x) => [x.id, timeOf(x)]));
+
+    // 1. Şiirleri birleştir ve kara listedeki (silinmiş) olanları kesin olarak ayıkla
     let poems = mergeById(local.poems, cloud.poems, normalizePoem).filter((poem) => {
       const deletedTime = deletedMap.get(poem.id);
       return !deletedTime || timeOf(poem) > deletedTime;
     });
+
     const activeIds = new Set(poems.map((p) => p.id));
-    const books = enforceSingleBookPerPoem(mergeById(local.books, cloud.books, normalizeBook).map((book) => ({
+
+    // 2. Kitap projeleri: Yerel cihazdaki projeleri önceliklendir, silinen projeleri buluttan hortlatma
+    const baseBooks = (local.books && local.books.length > 0)
+      ? local.books
+      : enforceSingleBookPerPoem(cloud.books || []);
+
+    // 3. Kitapların içindeki şiir ID'lerini sadece yaşayan şiirlerle sınırla
+    const books = baseBooks.map((book) => ({
       ...book,
       poemIds: (book.poemIds || []).filter((id) => activeIds.has(id)),
-    })));
+    }));
+
     return {
       app: 'munnesir',
-      version: '1.0.1',
+      version: '1.0.2',
       schema: 3,
       exportedAt: stamp(),
       poems,

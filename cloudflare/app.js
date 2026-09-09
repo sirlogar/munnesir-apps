@@ -1454,10 +1454,10 @@
       const container = $('#bookListContainer');
 
       if (!allBooks.length) {
-        if (selectEl) selectEl.innerHTML = '<option>Kitap Yok</option>';
+        if (selectEl) selectEl.innerHTML = '<option value="">Kitap Yok</option>';
         if (container) {
           container.className = 'modalBody bookModalBody';
-          container.innerHTML = '<p style="text-align:center; opacity:0.7;">Henüz bir kitap adayı bulunmuyor.</p>';
+          container.innerHTML = '<p style="text-align:center; opacity:0.7;">Henüz bir kitap projesi bulunmuyor.</p>';
         }
         return;
       }
@@ -1465,21 +1465,21 @@
       if (selectEl) {
         const currentVal = selectEl.value;
         selectEl.innerHTML = allBooks.map(b => {
-          const count = state.poems.filter(p => !p.trashedAt && (
+          const count = state.poems.filter(p => !p.trashedAt && p.status !== 'trash' && (
             (Array.isArray(p.books) && p.books.includes(b)) ||
             (b === 'Bir Sevdanın Kanadından' && p.isBookCandidate)
           )).length;
           return `<option value="${plain(b)}">${plain(b)} (${count} şiir)</option>`;
         }).join('');
 
-        if (allBooks.includes(currentVal)) selectEl.value = currentVal;
+        // Seçili kitap varsa onu koru, yoksa ilk kitabı seç
+        selectEl.value = allBooks.includes(currentVal) ? currentVal : allBooks[0];
       }
 
       displayPoemsOfBook(selectEl ? selectEl.value : allBooks[0]);
 
       if ($('#bookPoemSearchInput')) $('#bookPoemSearchInput').value = '';
       if ($('#bookPoemAssignChecklist')) $('#bookPoemAssignChecklist').style.display = 'none';
-
     }
 
     function displayPoemsOfBook(bookTitle) {
@@ -1755,6 +1755,30 @@
       };
     });
   };
+
+
+  // BULUTTAN GELEN SİLME EMİRLERİNİ VERİTABANINDAN SİLİCİ
+  window.deleteMany = async function(ids) {
+    if (!ids || !ids.length || !db) return;
+    const idSet = new Set(ids.map(x => String(x)));
+    return new Promise((resolve) => {
+      const tx = db.transaction('poems', 'readwrite');
+      const store = tx.objectStore('poems');
+      state.poems = state.poems.filter(p => !idSet.has(String(p.id)));
+      ids.forEach(id => {
+        store.delete(id);
+        if (!isNaN(Number(id))) store.delete(Number(id));
+        store.delete(String(id));
+      });
+      tx.oncomplete = () => {
+        refresh();
+        resolve();
+      };
+      tx.onerror = () => resolve();
+    });
+  };
+
+
 
   // SYNC SNAPSHOT PAYLOAD ÇÖZÜCÜ (STRING/JSON GARANTİLİ PARSER)
   window.importJsonPayloads = async function(payloads) {
