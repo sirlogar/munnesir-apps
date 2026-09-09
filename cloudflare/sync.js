@@ -31,15 +31,13 @@
     try { return JSON.parse(value || ''); } catch (_) { return fallback; }
   }
 
-  function normalizeBase(value) {
-    const raw = String(value || '').trim();
-    if (raw && !raw.includes('devtunnels.ms') && !raw.includes('localhost') && !raw.includes('127.0.0.1')) {
-      return raw.replace(/\/+$/, '');
+  function normalizeBase() {
+    // Sadece localhost üzerinde çalışırken Cloudflare test adresine yönlendir
+    if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+      return DEFAULT_API_BASE;
     }
-    if (location.hostname.endsWith('munnesir.pages.dev')) {
-      return location.origin;
-    }
-    return DEFAULT_API_BASE;
+    // Canlı sitede (app.munnesir.com) CORS hatasını engellemek için kendi origin'ini kullan
+    return location.origin;
   }
 
   function loadConfig() {
@@ -382,8 +380,10 @@
   }
 
   async function localHash() {
-    const snap = await localSnapshot();
-    return JSON.stringify({ poems: snap.poems, books: snap.books, deleted: snap.deleted });
+    const poems = typeof window.getAllPoems === 'function' ? await window.getAllPoems() : [];
+    const books = readBooks();
+    const lastMod = poems.reduce((max, p) => Math.max(max, new Date(p.updatedAt || p.createdAt || 0).getTime()), 0);
+    return `${poems.length}-${books.length}-${lastMod}`;
   }
 
   function scheduleSync() {
@@ -394,7 +394,7 @@
   }
 
   function patchLocalMutations() {
-    const names = ['savePoem', 'saveMany', 'hardDeletePoem', 'moveToTrash', 'restorePoem', 'importJsonPayloads'];
+    const names = ['savePoem', 'saveMany', 'hardDeletePoem', 'moveToTrash', 'restorePoem'];
     names.forEach((name) => {
       if (typeof window[name] !== 'function' || window[name].__munnesirPatched) return;
       const original = window[name];
@@ -402,7 +402,8 @@
         if (name === 'deletePoem') addTombstones([args[0]]);
         if (name === 'deleteMany') addTombstones(args[0] || []);
         const result = await original.apply(this, args);
-        scheduleSync();
+        // Buluttan gelen veriyi veritabanına yazarken tekrar buluta gönderme döngüsünü kır
+        if (!isSyncing) scheduleSync();
         return result;
       };
       wrapped.__munnesirPatched = true;

@@ -191,10 +191,9 @@
     updateSidebarCounts();
 
     // Karşı cihazda kitap penceresi açıksa canlı güncelle
-    if ($('#bookDialog')?.open && typeof renderBookModalView === 'function') {
-      renderBookModalView();
+    if ($('#bookDialog')?.open && typeof window.renderBookModalView === 'function') {
+      window.renderBookModalView();
     }
-    
   }
 
   // SİDEBAR MEVCUT SAYILARI GÖSTERME
@@ -1531,6 +1530,8 @@
 
       if ($('#bookPoemSearchInput')) $('#bookPoemSearchInput').value = '';
       if ($('#bookPoemAssignChecklist')) $('#bookPoemAssignChecklist').style.display = 'none';
+
+      window.renderBookModalView = renderBookModalView;
     }
 
     function displayPoemsOfBook(bookTitle) {
