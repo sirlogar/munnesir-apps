@@ -189,6 +189,12 @@
     renderTags();
     renderFeed();
     updateSidebarCounts();
+
+    // Karşı cihazda kitap penceresi açıksa canlı güncelle
+    if ($('#bookDialog')?.open && typeof renderBookModalView === 'function') {
+      renderBookModalView();
+    }
+    
   }
 
   // SİDEBAR MEVCUT SAYILARI GÖSTERME
@@ -1482,7 +1488,11 @@
       poem.isBookCandidate = checked.length > 0;
       poem.updatedAt = new Date().toISOString();
 
-      await savePoemToDB(poem);
+      if (typeof window.savePoem === 'function') await window.savePoem(poem);
+      else await savePoemToDB(poem);
+
+      if (window.MunnesirSync?.scheduleSync) window.MunnesirSync.scheduleSync();
+
       $('#bookAssignDialog')?.close();
       refresh();
       alert('✓ Şiirin kitap atamaları güncellendi.');
@@ -1708,7 +1718,12 @@
         }
 
         poem.updatedAt = new Date().toISOString();
-        await savePoemToDB(poem);
+        // savePoemToDB yerine senkron dinleyicili global fonksiyon
+        if (typeof window.savePoem === 'function') await window.savePoem(poem);
+        else await savePoemToDB(poem);
+
+        if (window.MunnesirSync?.scheduleSync) window.MunnesirSync.scheduleSync();
+        
         
         // Kutucuğu işaretlediğiniz anda aşağıdaki ızgarayı anında yeniler
         displayPoemsOfBook(bookTitle);
