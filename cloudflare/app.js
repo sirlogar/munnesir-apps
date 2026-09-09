@@ -1360,16 +1360,26 @@
 
     // ANDROID VE WEB UYUMLU DİNAMİK KİTAP YÖNETİMİ
     function getAllAvailableBooks() {
+      const deletedBooks = new Set(JSON.parse(localStorage.getItem('munnesir-sync-deleted-books') || '["KJKJBK", "Şiirsel Şeyler"]').map(b => String(b).trim()));
       const bookSet = new Set();
-      const localBooks = JSON.parse(localStorage.getItem('munnesir-books') || '[]');
-      localBooks.forEach(b => { if (b.title) bookSet.add(b.title.trim()); });
+      
+      let localBooks = JSON.parse(localStorage.getItem('munnesir-books') || '[]');
+      // Silinmişleri yerel depolamadan da kazı
+      localBooks = localBooks.filter(b => b && b.title && !deletedBooks.has(b.title.trim()));
+      localStorage.setItem('munnesir-books', JSON.stringify(localBooks));
+      
+      localBooks.forEach(b => bookSet.add(b.title.trim()));
 
-      // Şiirlerin üstündeki Android etiketlerini ve kitap dizilerini topla
       state.poems.forEach(p => {
         if (!p.trashedAt && p.status !== 'trash') {
-          if (Array.isArray(p.books)) p.books.forEach(b => bookSet.add(b.trim()));
-          if (p.bookTitle) bookSet.add(p.bookTitle.trim());
-          if (p.isBookCandidate || p.status === 'book') bookSet.add('Bir Sevdanın Kanadından');
+          if (Array.isArray(p.books)) p.books.forEach(b => {
+            const clean = String(b || '').trim();
+            if (clean && !deletedBooks.has(clean)) bookSet.add(clean);
+          });
+          if (p.bookTitle && !deletedBooks.has(p.bookTitle.trim())) bookSet.add(p.bookTitle.trim());
+          if ((p.isBookCandidate || p.status === 'book') && !deletedBooks.has('Bir Sevdanın Kanadından')) {
+            bookSet.add('Bir Sevdanın Kanadından');
+          }
         }
       });
 
@@ -1422,12 +1432,24 @@
     $('#createBookBtn')?.addEventListener('click', () => {
       const val = $('#newBookTitleInput')?.value.trim();
       if (!val) return;
+
+      // 1. Yeni kitap açılırken ismi kara listeden sil (Yeniden oluşturma izni)
+      let delBooks = JSON.parse(localStorage.getItem('munnesir-sync-deleted-books') || '[]');
+      delBooks = delBooks.filter(b => b !== val);
+      localStorage.setItem('munnesir-sync-deleted-books', JSON.stringify(delBooks));
+
+      // 2. Kitabı yerel listeye ekle
       const localBooks = JSON.parse(localStorage.getItem('munnesir-books') || '[]');
       if (!localBooks.some(b => b.title === val)) {
         localBooks.push({ id: `book-${Date.now()}`, title: val });
         localStorage.setItem('munnesir-books', JSON.stringify(localBooks));
       }
+
       $('#newBookTitleInput').value = '';
+      
+      // Bulut senkronizasyonunu anlık tetikle
+      if (window.MunnesirSync?.scheduleSync) window.MunnesirSync.scheduleSync();
+      
       window.openBookAssigner(activeAssignPoemId);
     });
 
@@ -1527,17 +1549,28 @@
       const name = prompt('Yeni kitap projesinin adını girin:');
       if (name && name.trim()) {
         const val = name.trim();
+
+        // 1. Yeni kitap açılırken ismi kara listeden sil (Yeniden oluşturma izni)
+        let delBooks = JSON.parse(localStorage.getItem('munnesir-sync-deleted-books') || '[]');
+        delBooks = delBooks.filter(b => b !== val);
+        localStorage.setItem('munnesir-sync-deleted-books', JSON.stringify(delBooks));
+
+        // 2. Kitabı yerel listeye ekle
         const localBooks = JSON.parse(localStorage.getItem('munnesir-books') || '[]');
         if (!localBooks.some(b => b.title === val)) {
           localBooks.push({ id: `book-${Date.now()}`, title: val });
           localStorage.setItem('munnesir-books', JSON.stringify(localBooks));
         }
+
         renderBookModalView();
         const selectEl = $('#activeBookFilterSelect');
         if (selectEl) {
           selectEl.value = val;
           displayPoemsOfBook(val);
         }
+
+        // Bulut senkronizasyonunu anlık tetikle
+        if (window.MunnesirSync?.scheduleSync) window.MunnesirSync.scheduleSync();
       }
     });
 
@@ -1665,23 +1698,28 @@
     });
 
 
-
-    // SEÇİLİ KİTABI SİL (ŞİİRLER SİLİNMEZ, SADECE KİTAPTAN ÇIKARILIR)
+    // SEÇİLİ KİTABI SİL
     $('#deleteActiveBookBtn')?.addEventListener('click', async () => {
       const selectEl = $('#activeBookFilterSelect');
       const bookTitle = selectEl?.value;
       if (!bookTitle) return;
 
-      // ESKİ if (!confirm(...)) SATIRININ YERİNE GELEN TEMATİK KOD:
       const ok = await showConfirm(`'${bookTitle}' projesini silmek istediğinize emin misiniz?\n(Şiirleriniz silinmez, yalnızca bu kitaptan ayrılır.)`, 'Kitap Projesini Sil');
       if (!ok) return;
 
-      // Yerel listeden temizle
+      // 1. Yerel listeden temizle
       let localBooks = JSON.parse(localStorage.getItem('munnesir-books') || '[]');
       localBooks = localBooks.filter(b => b.title !== bookTitle);
       localStorage.setItem('munnesir-books', JSON.stringify(localBooks));
 
-      // Şiir nesnelerinin içinden bu kitabı temizle
+      // 2. Kara listeye kaydet (Buluttan geri gelmesini engeller)
+      let delBooks = JSON.parse(localStorage.getItem('munnesir-sync-deleted-books') || '[]');
+      if (!delBooks.includes(bookTitle)) {
+        delBooks.push(bookTitle);
+        localStorage.setItem('munnesir-sync-deleted-books', JSON.stringify(delBooks));
+      }
+
+      // 3. Şiirlerin içinden bu kitabı temizle
       const changed = [];
       state.poems.forEach(p => {
         let wasChanged = false;
@@ -1708,6 +1746,9 @@
 
       renderBookModalView();
       refresh();
+      
+      // Anlık bulut senkronunu tetikle
+      if (window.MunnesirSync?.scheduleSync) window.MunnesirSync.scheduleSync();
       showToast(`✓ '${bookTitle}' projesi silindi.`);
     });
 

@@ -3,6 +3,18 @@
   const CONFIG_KEY = 'munnesir-cloudflare-sync-config';
   const BOOKS_KEY = 'munnesir-books';
   const DELETED_KEY = 'munnesir-sync-deleted-ids';
+  const DELETED_BOOKS_KEY = 'munnesir-sync-deleted-books';
+
+  function readDeletedBooks() {
+    let arr = safeJsonParse(localStorage.getItem(DELETED_BOOKS_KEY), []);
+    return Array.isArray(arr) ? arr : [];
+  }
+
+  function writeDeletedBooks(items) {
+    localStorage.setItem(DELETED_BOOKS_KEY, JSON.stringify(Array.isArray(items) ? items : []));
+  }
+
+
   const DEFAULT_API_BASE = 'https://munnesir.pages.dev'; // <-- Cloudflare canlı adresin
   const POLL_MS = 2000;
   const PUSH_DEBOUNCE_MS = 200;
@@ -237,6 +249,7 @@
       poems: poems.map(normalizePoem).filter(Boolean),
       books: readBooks().map(normalizeBook).filter(Boolean),
       deleted: readDeleted(),
+      deletedBooks: readDeletedBooks(),
     };
   }
 
@@ -246,7 +259,7 @@
     const deleted = mergeDeleted(local.deleted, cloud.deleted);
     const deletedMap = new Map(deleted.map((x) => [x.id, timeOf(x)]));
 
-    // 1. Şiirleri birleştir ve kara listedeki (silinmiş) olanları kesin olarak ayıkla
+    // 1. Şiirleri birleştir ve silinenleri temizle
     let poems = mergeById(local.poems, cloud.poems, normalizePoem).filter((poem) => {
       const deletedTime = deletedMap.get(poem.id);
       return !deletedTime || timeOf(poem) > deletedTime;
@@ -254,13 +267,25 @@
 
     const activeIds = new Set(poems.map((p) => p.id));
 
-    // 2. Kitap projeleri: Yerel cihazdaki projeleri önceliklendir, silinen projeleri buluttan hortlatma
-    const baseBooks = (local.books && local.books.length > 0)
-      ? local.books
-      : enforceSingleBookPerPoem(cloud.books || []);
+    // 2. Kitap kara listesini eşitle
+    const allDeletedBooks = new Set([
+      ...readDeletedBooks(),
+      ...(Array.isArray(cloud.deletedBooks) ? cloud.deletedBooks : [])
+    ].map(b => String(b).trim()));
+    writeDeletedBooks([...allDeletedBooks]);
 
-    // 3. Kitapların içindeki şiir ID'lerini sadece yaşayan şiirlerle sınırla
-    const books = baseBooks.map((book) => ({
+    // 3. Kitapları birleştir: Kara listede olan hayalet kitapları kesin olarak at
+    const bookMap = new Map();
+    [...(cloud.books || []), ...(local.books || [])].forEach((b) => {
+      const normalized = normalizeBook(b);
+      if (!normalized || !normalized.title) return;
+      const title = normalized.title.trim();
+      if (allDeletedBooks.has(title)) return;
+      const old = bookMap.get(title);
+      if (!old || timeOf(normalized) >= timeOf(old)) bookMap.set(title, normalized);
+    });
+
+    const books = Array.from(bookMap.values()).map((book) => ({
       ...book,
       poemIds: (book.poemIds || []).filter((id) => activeIds.has(id)),
     }));
@@ -273,6 +298,7 @@
       poems,
       books,
       deleted,
+      deletedBooks: [...allDeletedBooks],
       poemCount: poems.length,
     };
   }
