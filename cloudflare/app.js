@@ -318,19 +318,11 @@
       setBadge(trashBtn, trashedCount);
     }
 
-    // 3. Kitap Projeleri Sayısı
+    // 3. Kitap Projeleri Sayısı (Şiirleri değil, kitap projelerini sayar)
     const bookBtn = $('#bookViewBtn');
     if (bookBtn) {
-      const localBooks = JSON.parse(localStorage.getItem('munnesir-books') || '[]');
-      const bookPoemIds = new Set();
-      localBooks.forEach(b => (b.poemIds || []).forEach(id => bookPoemIds.add(id)));
-      const bookCount = state.poems.filter(p => 
-        !p.trashedAt && 
-        p.status !== 'trash' && 
-        !deletedSyncIds.has(String(p.id)) && 
-        (p.isBookCandidate || p.status === 'book' || bookPoemIds.has(p.id))
-      ).length;
-      setBadge(bookBtn, bookCount);
+      const allBooks = typeof getAllAvailableBooks === 'function' ? getAllAvailableBooks() : [];
+      setBadge(bookBtn, allBooks.length);
     }
   }
 
