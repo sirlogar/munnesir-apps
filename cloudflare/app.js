@@ -374,25 +374,27 @@
 
     if (trashed.length) {
       container.className = "poemGrid";
-      container.innerHTML = trashed.map(t => `
-        <article class="poemCard" data-id="${t.id}">
-          <div class="cardMainClick" onclick="window.openReader('${t.id}', true)">
+      container.innerHTML = trashed.map(t => {
+        const safeId = String(t.id).replace(/'/g, "\\'");
+        return `
+        <article class="poemCard" data-id="${plain(t.id)}">
+          <div class="cardMainClick" onclick="window.openReader('${safeId}', true)">
             <h3>${plain(t.title)}</h3>
             <p class="${t.fontFamily || 'font-tinos'}">${plain(t.content).slice(0, 140)}...</p>
           </div>
           <div class="cardFooterActions">
             <span style="font-size:0.75rem; opacity:0.6;">${getPoemDate(t)}</span>
             <div class="cardActionBtns">
-              <button class="stdBtn cardActionBtn" onclick="window.restorePoem('${t.id}', event)">
+              <button class="stdBtn cardActionBtn" onclick="window.restorePoem('${safeId}', event)">
                 <svg class="uiIcon"><use href="#icon-restore"></use></svg><span>Geri Yükle</span>
               </button>
-              <button class="stdBtn cardActionBtn btn-danger" onclick="window.hardDeletePoem('${t.id}', event)">
+              <button class="stdBtn cardActionBtn btn-danger" onclick="window.hardDeletePoem('${safeId}', event)">
                 <svg class="uiIcon"><use href="#icon-trash"></use></svg><span>Kalıcı Sil</span>
               </button>
             </div>
           </div>
         </article>
-      `).join('');
+      `;}).join('');
     } else {
       container.className = "modalBody";
       container.innerHTML = '<p style="text-align: center; opacity: 0.7; padding: 20px 0;">Çöp kutusu boş.</p>';
@@ -455,28 +457,32 @@
     if (emptyState) emptyState.hidden = true;
 
     // SAĞA YASLI DÜZENLE VE PAYLAŞ BUTONLU KART YAPISI
-    grid.innerHTML = list.map((p) => `
-      <article class="poemCard" data-id="${p.id}">
-        <div class="cardMainClick" onclick="window.openReader('${p.id}')">
+    // SAĞA YASLI DÜZENLE VE PAYLAŞ BUTONLU KART YAPISI
+    grid.innerHTML = list.map((p) => {
+      const safeId = String(p.id).replace(/'/g, "\\'");
+      return `
+      <article class="poemCard" data-id="${plain(p.id)}">
+        <div class="cardMainClick" onclick="window.openReader('${safeId}')">
           <h3>${p.favorite ? '★ ' : ''}${plain(p.title)}</h3>
           <p class="${p.fontFamily || 'font-tinos'}">${plain(p.content).slice(0, 140)}...</p>
         </div>
         <div class="cardFooterActions">
           <span style="font-size:0.75rem; opacity:0.6;">${getPoemDate(p)}</span>
           <div class="cardActionBtns">
-            <button class="stdBtn cardActionBtn" onclick="window.sharePoem('${p.id}', event)">
+            <button class="stdBtn cardActionBtn" onclick="window.sharePoem('${safeId}', event)">
               <svg class="uiIcon"><use href="#icon-share"></use></svg>
               <span>Paylaş</span>
             </button>
-            <button class="stdBtn cardActionBtn" onclick="window.editPoem('${p.id}', event)">
+            <button class="stdBtn cardActionBtn" onclick="window.editPoem('${safeId}', event)">
               <svg class="uiIcon"><use href="#icon-pen"></use></svg>
               <span>Düzenle</span>
             </button>
           </div>
         </div>
-        </div>
       </article>
-    `).join('');
+    `;}).join('');
+
+
   }
 
   function applyTheme(t) {
@@ -819,25 +825,27 @@
 
       if (books.length) {
         container.className = "poemGrid";
-        container.innerHTML = books.map(b => `
-          <article class="poemCard" data-id="${b.id}">
-            <div class="cardMainClick" onclick="window.openReader('${b.id}')">
+        container.innerHTML = books.map(b => {
+          const safeId = String(b.id).replace(/'/g, "\\'");
+          return `
+          <article class="poemCard" data-id="${plain(b.id)}">
+            <div class="cardMainClick" onclick="window.openReader('${safeId}')">
               <h3>${plain(b.title)}</h3>
               <p class="${b.fontFamily || 'font-tinos'}">${plain(b.content).slice(0, 140)}...</p>
             </div>
             <div class="cardFooterActions">
               <span style="font-size:0.75rem; opacity:0.6;">${getPoemDate(b)}</span>
               <div class="cardActionBtns">
-                <button class="stdBtn cardActionBtn" onclick="window.sharePoem('${b.id}', event)">
+                <button class="stdBtn cardActionBtn" onclick="window.sharePoem('${safeId}', event)">
                   <svg class="uiIcon"><use href="#icon-share"></use></svg><span>Paylaş</span>
                 </button>
-                <button class="stdBtn cardActionBtn" onclick="window.editPoem('${b.id}', event)">
+                <button class="stdBtn cardActionBtn" onclick="window.editPoem('${safeId}', event)">
                   <svg class="uiIcon"><use href="#icon-pen"></use></svg><span>Düzenle</span>
                 </button>
               </div>
             </div>
           </article>
-        `).join('');
+        `;}).join('');
       } else {
         container.className = "modalBody";
         container.innerHTML = '<p style="text-align: center; opacity: 0.7; padding: 20px 0;">Henüz kitap adayı olarak işaretlenmiş bir çalışma bulunamadı.<br>Yukarıdaki butonla şiir seçebilirsiniz.</p>';
@@ -1545,25 +1553,27 @@
 
       if (poems.length) {
         container.className = 'modalBody bookModalBody poemGrid';
-        container.innerHTML = poems.map(b => `
-          <article class="poemCard" data-id="${b.id}">
-            <div class="cardMainClick" onclick="window.openReader('${b.id}')">
+        container.innerHTML = poems.map(b => {
+          const safeId = String(b.id).replace(/'/g, "\\'");
+          return `
+          <article class="poemCard" data-id="${plain(b.id)}">
+            <div class="cardMainClick" onclick="window.openReader('${safeId}')">
               <h3>${plain(b.title)}</h3>
               <p class="${b.fontFamily || 'font-tinos'}">${plain(b.content).slice(0, 140)}...</p>
             </div>
             <div class="cardFooterActions">
               <span style="font-size:0.75rem; opacity:0.6;">${getPoemDate(b)}</span>
               <div class="cardActionBtns">
-                <button class="stdBtn cardActionBtn" onclick="window.sharePoem('${b.id}', event)">
+                <button class="stdBtn cardActionBtn" onclick="window.sharePoem('${safeId}', event)">
                   <svg class="uiIcon"><use href="#icon-share"></use></svg><span>Paylaş</span>
                 </button>
-                <button class="stdBtn cardActionBtn" onclick="window.editPoem('${b.id}', event)">
+                <button class="stdBtn cardActionBtn" onclick="window.editPoem('${safeId}', event)">
                   <svg class="uiIcon"><use href="#icon-pen"></use></svg><span>Düzenle</span>
                 </button>
               </div>
             </div>
           </article>
-        `).join('');
+        `;}).join('');
       } else {
         container.className = 'modalBody bookModalBody';
         container.innerHTML = `<p style="text-align:center; opacity:0.7; padding:20px 0;">Bu kitapta henüz şiir yok. Şiir içinden 'Kitaba Ekle' diyerek ekleyebilirsiniz.</p>`;
