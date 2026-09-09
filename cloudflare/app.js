@@ -318,12 +318,39 @@
       setBadge(trashBtn, trashedCount);
     }
 
-    // 3. Kitap Projeleri Sayısı (Şiirleri değil, kitap projelerini sayar)
+    
+    // 3. Kitap Projeleri Sayısı (Kapsam hatasından bağımsız tüm kitapları doğrudan sayar)
     const bookBtn = $('#bookViewBtn');
     if (bookBtn) {
-      const allBooks = typeof getAllAvailableBooks === 'function' ? getAllAvailableBooks() : [];
-      setBadge(bookBtn, allBooks.length);
+      const deletedBooks = new Set(JSON.parse(localStorage.getItem('munnesir-sync-deleted-books') || '[]').map(b => String(b).trim()));
+      const bookSet = new Set();
+      const localBooks = JSON.parse(localStorage.getItem('munnesir-books') || '[]');
+      
+      localBooks.forEach(b => {
+        const title = b?.title ? String(b.title).trim() : '';
+        if (title && !deletedBooks.has(title)) bookSet.add(title);
+      });
+
+      state.poems.forEach(p => {
+        if (!p.trashedAt && p.status !== 'trash') {
+          if (Array.isArray(p.books)) {
+            p.books.forEach(b => {
+              const clean = String(b || '').trim();
+              if (clean && !deletedBooks.has(clean)) bookSet.add(clean);
+            });
+          }
+          if ((p.isBookCandidate || p.status === 'book') && !deletedBooks.has('Bir Sevdanın Kanadından')) {
+            bookSet.add('Bir Sevdanın Kanadından');
+          }
+        }
+      });
+
+      if (!bookSet.size) bookSet.add('Bir Sevdanın Kanadından');
+      setBadge(bookBtn, bookSet.size);
     }
+
+
+
   }
 
   // ÇÖP KUTUSU
